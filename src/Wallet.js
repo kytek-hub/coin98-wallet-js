@@ -495,11 +495,9 @@ class Wallet {
         }
       }
       const transfer = polkadotApi.tx.balances.transfer(toAddress, convertBalanceToWei(amount, isKSM ? 12 : 10))
-      transfer.signAndSend(pairPolkadot).then(hash => {
-        return hash
-      }).catch(error => {
-        throw new Error(error)
-      })
+
+      const hash = transfer.signAndSend(pairPolkadot)
+      return hash
     } catch (error) {
       throw new Error(error)
     }
@@ -772,6 +770,7 @@ class Wallet {
       case CHAIN_TYPE.ether:
       case CHAIN_TYPE.heco:
       case CHAIN_TYPE.binanceSmart:
+      case CHAIN_TYPE.binance:
         return this[`_${action}EthWallet`]
       case CHAIN_TYPE.solana:
         return this[`_${action}SolWallet`]
