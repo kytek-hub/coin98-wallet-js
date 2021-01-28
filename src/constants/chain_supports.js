@@ -1,0 +1,29 @@
+export const CHAIN_TYPE = {
+  binanceSmart: 'binanceSmart',
+  multiChain: 'multiChain',
+  bitcoin: 'bitcoin',
+  tomo: 'tomo',
+  binance: 'binance',
+  ether: 'ether',
+  eos: 'eos',
+  band: 'band',
+  solana: 'solana',
+  tron: 'tron',
+  polkadot: 'polkadot',
+  celo: 'celo',
+  cosmos: 'cosmos',
+  doge: 'doge',
+  kusama: 'kusama',
+  heco: 'heco',
+  near: 'near',
+  avax: 'avax',
+  link: 'link'
+}
+
+export default [
+  CHAIN_TYPE.ether,
+  CHAIN_TYPE.solana,
+  CHAIN_TYPE.polkadot,
+  CHAIN_TYPE.kusama,
+  CHAIN_TYPE.heco
+]
