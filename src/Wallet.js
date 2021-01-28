@@ -265,7 +265,7 @@ class Wallet {
 
   async _sendFromEthWallet ({ toAddress, amount, sendContract, gas, chain }) {
     if (!this.web3) {
-      this.web3 = createConnectionInstance(chain)
+      this.web3 = await createConnectionInstance(chain)
     }
 
     try {
@@ -302,10 +302,9 @@ class Wallet {
       }
 
       const result = await this.postBaseSendTxs(this.privateKey, [generateTxs], false, null, chain)
-
       return result[0]
     } catch (error) {
-      throw new Error(error)
+      throw new Error(JSON.stringify(error))
     }
   }
 
@@ -496,7 +495,7 @@ class Wallet {
       }
       const transfer = polkadotApi.tx.balances.transfer(toAddress, convertBalanceToWei(amount, isKSM ? 12 : 10))
 
-      const hash = transfer.signAndSend(pairPolkadot)
+      const hash = await transfer.signAndSend(pairPolkadot)
       return hash
     } catch (error) {
       throw new Error(error)

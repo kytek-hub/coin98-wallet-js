@@ -8,7 +8,7 @@ import { getStorage, setStorage } from './utils'
 
 let apiPolkadot, apiKusama
 
-export const createConnectionInstance = async (chain, isProvider, activeKey, __DEV__) => {
+export const createConnectionInstance = async (chain, isProvider, activeKey, __DEV__ = false) => {
   const settings = {
     web3Link: {
       solana: 'https://solana-api.projectserum.com',
