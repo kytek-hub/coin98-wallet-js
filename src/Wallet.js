@@ -8,10 +8,10 @@ import converter from 'hex2dec'
 
 // Local Import
 import EtherGasStation from './EtherGasStation'
-import { MIN_ABI, SUPPORTED_CHAIN, TOKEN_PROGRAM_ID } from '../constants'
-import { ACCOUNT_LAYOUT, convertBalanceToWei, convertWeiToBalance, generateDataToken, getLength, sleep } from '../common/utils'
-import { CHAIN_TYPE } from '../constants/chain_supports'
-import { createConnectionInstance } from '../common/web3'
+import { MIN_ABI, SUPPORTED_CHAIN, TOKEN_PROGRAM_ID } from './constants'
+import { ACCOUNT_LAYOUT, convertBalanceToWei, convertWeiToBalance, generateDataToken, getLength, sleep } from './common/utils'
+import { CHAIN_TYPE } from './constants/chain_supports'
+import { createConnectionInstance } from './common/web3'
 
 const bip39 = require('bip39')
 
