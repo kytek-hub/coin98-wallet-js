@@ -248,18 +248,18 @@ class Wallet {
     contract.methods.balanceOf(address).call().then(balance => {
       if (decimalToken) {
         const tokenBalance = convertWeiToBalance(balance, decimalToken)
-        Promise.resolve(tokenBalance)
+        return tokenBalance
       } else {
         contract.methods.decimals().call().then(decimal => {
           const tokenBalance = convertWeiToBalance(balance, decimal)
-          Promise.resolve(tokenBalance)
+          return tokenBalance
         }).catch(() => {
           const tokenBalance = convertWeiToBalance(balance, 18)
-          Promise.resolve(tokenBalance)
+          return tokenBalance
         })
       }
     }).catch((e) => {
-      Promise.resolve(0)
+      return 0
     })
   }
 
@@ -301,14 +301,11 @@ class Wallet {
         generateTxs.gas = convertBalanceToWei(gas, 9)
       }
 
-      this.postBaseSendTxs(this.privateKey, [generateTxs], false, null, chain).then((result) => {
-        Promise.resolve(result[0])
-      }).catch(err => {
-        console.log(err)
-        Promise.reject(err)
-      })
+      const result = await this.postBaseSendTxs(this.privateKey, [generateTxs], false, null, chain)
+
+      return result[0]
     } catch (error) {
-      Promise.reject(error)
+      throw new Error(error)
     }
   }
 
@@ -383,22 +380,34 @@ class Wallet {
         )
       } catch (error) {
         console.log(error)
-        Promise.reject(error)
+        throw new Error(error)
       }
 
-      this.solanaConnection.sendTransaction(transaction, [account], { preflightCommitment: 'single' }).then(async (hash) => {
+      try {
+        const hash = await this.solanaConnection.sendTransaction(transaction, [account], { preflightCommitment: 'single' })
         try {
           await this._awaitTransactionSignatureConfirmation(hash)
-          Promise.resolve(hash)
-        } catch (error) {
-          // reject(timeOutTxs)
-          Promise.reject(error)
+          return hash
+        } catch (e) {
+          throw new Error(e)
         }
-      })
-        .catch((err) => {
-          console.log(err)
-          Promise.reject(err)
-        })
+      } catch (e) {
+        throw new Error(e)
+      }
+
+      // this.solanaConnection.sendTransaction(transaction, [account], { preflightCommitment: 'single' }).then(async (hash) => {
+      //   try {
+      //     await this._awaitTransactionSignatureConfirmation(hash)
+      //     Promise.resolve(hash)
+      //   } catch (error) {
+      //     // reject(timeOutTxs)
+      //     Promise.reject(error)
+      //   }
+      // })
+      //   .catch((err) => {
+      //     console.log(err)
+      //     Promise.reject(err)
+      //   })
     } else {
       let transaction
       try {
@@ -410,22 +419,34 @@ class Wallet {
           })
         )
       } catch (error) {
-        Promise.reject(error)
+        throw new Error(error)
       }
 
-      this.solanaConnection.sendTransaction(transaction, [account], { preflightCommitment: 'single' }).then(async (hash) => {
+      try {
+        const hash = await this.solanaConnection.sendTransaction(transaction, [account], { preflightCommitment: 'single' })
         try {
           await this._awaitTransactionSignatureConfirmation(hash)
-          Promise.resolve(hash)
-        } catch (error) {
-          Promise.reject(new Error('timeOutTxs'))
-          Promise.reject(error)
+          return hash
+        } catch (e) {
+          throw new Error('timeOutTxs')
         }
-      })
-        .catch((err) => {
-          console.log(err)
-          Promise.reject(err)
-        })
+      } catch (e) {
+        throw new Error(e)
+      }
+
+      // this.solanaConnection.sendTransaction(transaction, [account], { preflightCommitment: 'single' }).then(async (hash) => {
+      //   try {
+      //     await this._awaitTransactionSignatureConfirmation(hash)
+      //     Promise.resolve(hash)
+      //   } catch (error) {
+      //     Promise.reject(new Error('timeOutTxs'))
+      //     Promise.reject(error)
+      //   }
+      // })
+      //   .catch((err) => {
+      //     console.log(err)
+      //     Promise.reject(err)
+      //   })
     }
   }
 
@@ -470,17 +491,17 @@ class Wallet {
         const { data: balance } = await polkadotApi.query.system.account(toAddress)
         const toBalance = parseFloat(convertWeiToBalance(balance.free, isKSM ? 12 : 10))
         if ((toBalance + parseFloat(amount)) <= 1) {
-          return Promise.reject(new Error('Minimun 1 DOT'))
+          throw new Error('Minimun1DOT')
         }
       }
       const transfer = polkadotApi.tx.balances.transfer(toAddress, convertBalanceToWei(amount, isKSM ? 12 : 10))
       transfer.signAndSend(pairPolkadot).then(hash => {
-        Promise.resolve(hash)
+        return hash
       }).catch(error => {
-        Promise.reject(error)
+        throw new Error(error)
       })
     } catch (error) {
-      Promise.reject(error)
+      throw new Error(error)
     }
   }
 
@@ -591,9 +612,9 @@ class Wallet {
 
     try {
       const results = await Promise.all(promise)
-      Promise.resolve(results)
+      return results
     } catch (e) {
-      Promise.reject(e)
+      throw new Error(e)
     }
   }
 
