@@ -25,7 +25,19 @@ Minimal Library for handling wallet functions.
 
 * (?) is Optional
 # Method
+
 **getChain()**: *String* :  return current chain
+
 **getMnemonic()**: *String* : return current Mnemonic
+
 **getPrivateKey()**: *String* : return current PrivateKey
+
 **getSupportChains()**: *Array* : return Supported chains
+
+**async  create (chain, options = { }, callback = null)** :  Array : return array of wallets
+
+**async  getBalance (address, chain, callback)** : Number : return balance number
+
+**async  getTokenBalance (contractAddress, address, decimalToken, chain, solTokenAddress, callback)** : {address, balance} : return balance of token
+
+**async  send (toAddress, amount, sendContract, gas, chain, callback)**  : String : hash of send transaction
