@@ -1,15 +1,15 @@
-# @coin98/coin98-js
+# @coin98/coin98-wallet-js
 Minimal Library for handling wallet functions.
 
 # Installation
 
-     yarn add @coin98/coin98-js
+     yarn add @coin98/coin98-wallet-js
      // NPM
-     npm i @coin98/coin98-js
+     npm i @coin98/coin98-wallet-js
 
 # Get Started
 
-    import { Wallet } from '@coin98/coin98-js';
+    import { Wallet } from '@coin98/coin98-wallet-js';
     const wallet = new Wallet({ ...restOptions })
 
 ## Options
@@ -40,4 +40,4 @@ Minimal Library for handling wallet functions.
 
 **async  getTokenBalance (contractAddress, address, decimalToken, chain, solTokenAddress, callback)** : {address, balance} : return balance of token
 
-**async  send (toAddress, amount, sendContract, gas, chain, callback)**  : String : hash of send transaction
+**async  send (toAddress, amount, sendContract, gas, chain, callback)**  : String : hash of sending
