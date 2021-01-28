@@ -388,7 +388,7 @@ class Wallet {
 
       this.solanaConnection.sendTransaction(transaction, [account], { preflightCommitment: 'single' }).then(async (hash) => {
         try {
-          await this.awaitTransactionSignatureConfirmation(hash)
+          await this._awaitTransactionSignatureConfirmation(hash)
           Promise.resolve(hash)
         } catch (error) {
           // reject(timeOutTxs)
