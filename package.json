@@ -1,5 +1,5 @@
 {
-  "name": "@coin98/coin98-js",
+  "name": "@coin98/coin98-wallet-js",
   "version": "1.0.0",
   "description": "Coin98 Wallet JS Library",
   "main": "index.js",
