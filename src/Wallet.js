@@ -165,7 +165,7 @@ class Wallet {
   }
 
   async send (toAddress, amount, sendContract, gas, chain, callback) {
-    const sendFunction = this._chainActionFunction('sendFrom')
+    const sendFunction = this._chainActionFunction(chain, 'sendFrom')
 
     try {
       const hash = await sendFunction({ toAddress, amount, sendContract, gas, chain, callback })
