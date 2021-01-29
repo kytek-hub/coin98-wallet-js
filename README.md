@@ -26,8 +26,6 @@ Minimal Library for handling wallet functions.
 * (?) is Optional
 # Method
 
-**getChain()**: *String* :  return current chain
-
 **getMnemonic()**: *String* : return current Mnemonic
 
 **getPrivateKey()**: *String* : return current PrivateKey
