@@ -210,7 +210,7 @@ class Wallet {
       this.mnemonic = ethWallet.mnemonic
     }
 
-    return { ...ethWallet, mnemonic: processPhrase, chain }
+    return { ...ethWallet, mnemonic: ethWallet.mnemonic || processPhrase, chain }
   }
 
   async _getBalanceEthWallet (address) {
