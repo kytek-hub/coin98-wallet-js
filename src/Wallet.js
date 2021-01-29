@@ -265,7 +265,12 @@ class Wallet {
 
   async _sendFromEthWallet ({ toAddress, amount, sendContract, gas, chain }) {
     if (!this.web3) {
-      this.web3 = await createConnectionInstance(chain)
+      this.web3 = await createConnectionInstance(
+        chain,
+        false,
+        this.infuraKey,
+        this.__DEV__
+      )
     }
 
     try {
