@@ -210,7 +210,7 @@ class Wallet {
       this.mnemonic = ethWallet.mnemonic
     }
 
-    return { ...ethWallet, chain }
+    return { ...ethWallet, mnemonic: processPhrase, chain }
   }
 
   async _getBalanceEthWallet (address) {
@@ -309,7 +309,7 @@ class Wallet {
       const result = await this._postBaseSendTxs(this.privateKey, [generateTxs], false, null, chain)
       return result[0]
     } catch (error) {
-      throw new Error(JSON.stringify(error))
+      throw new Error(error)
     }
   }
 
