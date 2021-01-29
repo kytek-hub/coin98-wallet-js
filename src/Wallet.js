@@ -496,7 +496,7 @@ class Wallet {
       const transfer = polkadotApi.tx.balances.transfer(toAddress, convertBalanceToWei(amount, isKSM ? 12 : 10))
 
       const hash = await transfer.signAndSend(pairPolkadot)
-      return hash
+      return typeof hash === 'object' ? hash.toHex() : hash
     } catch (error) {
       throw new Error(error)
     }
