@@ -17,7 +17,7 @@ Minimal Library for handling wallet functions.
     {
 	    mnemonic?: <String>,
 	    PrivateKey?: <String>,
-	    __DEV__: <Boolean>,
+	    isDev: <Boolean>,
 	    apiServices: <BaseAPI Instance>,
 	    infuraKey?: <String>, 
 	    web3?: Web3 Instance
