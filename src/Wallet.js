@@ -306,7 +306,7 @@ class Wallet {
         generateTxs.gas = convertBalanceToWei(gas, 9)
       }
 
-      const result = await this.postBaseSendTxs(this.privateKey, [generateTxs], false, null, chain)
+      const result = await this._postBaseSendTxs(this.privateKey, [generateTxs], false, null, chain)
       return result[0]
     } catch (error) {
       throw new Error(JSON.stringify(error))
