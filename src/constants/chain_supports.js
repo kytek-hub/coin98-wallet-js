@@ -22,6 +22,7 @@ export const CHAIN_TYPE = {
 
 export default [
   CHAIN_TYPE.ether,
+  CHAIN_TYPE.binanceSmart,
   CHAIN_TYPE.solana,
   CHAIN_TYPE.polkadot,
   CHAIN_TYPE.kusama,

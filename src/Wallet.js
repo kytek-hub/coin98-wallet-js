@@ -455,14 +455,14 @@ class Wallet {
   }
 
   // Polkadot || Kusama
-  async _createDotWallet () {
+  async _createDotWallet (chain) {
     const otherMnemonic = await this._genSeed(true)
-    const isKusama = this.chain === CHAIN_TYPE.kusama
+    const isKusama = chain === CHAIN_TYPE.kusama
     const ss58Format = isKusama ? 2 : 0
 
     const keyringPolkadot = new Keyring({ type: 'sr25519', ss58Format })
     const nodePolkadot = keyringPolkadot.addFromUri(otherMnemonic)
-    return { privateKey: '', address: nodePolkadot.address, chain: isKusama ? CHAIN_TYPE.kusama : CHAIN_TYPE.polkadot }
+    return { privateKey: '', address: nodePolkadot.address, chain }
   }
 
   async _getBalanceDotWallet (address, chain) {
