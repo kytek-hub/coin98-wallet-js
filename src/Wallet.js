@@ -60,6 +60,7 @@ class Wallet {
     this._encodeTokenInstructionData = this._encodeTokenInstructionData.bind(this)
     this._awaitTransactionSignatureConfirmation = this._awaitTransactionSignatureConfirmation.bind(this)
     this._genNearKey = this._genNearKey.bind(this)
+    this._postBaseSendTxs = this._postBaseSendTxs.bind(this)
   }
 
   // * ---------
@@ -318,7 +319,7 @@ class Wallet {
         generateTxs.gas = convertBalanceToWei(gas, 9)
       }
 
-      const result = await this._postBaseSendTxs(this.privateKey, [generateTxs], false, null, chain)
+      const result = await this._postBaseSendTxs([generateTxs], false, chain)
       return result[0]
     } catch (error) {
       throw new Error(error)
@@ -570,7 +571,7 @@ class Wallet {
   async _postBaseSendTxs (arrSend, isWaitDone, chain, onConfirmTracking) {
     const CHAIN_ID = { etherID: this.__DEV__ ? '0x4' : '0X1', binanceSmartID: '0X38' }
     //
-    const { web3, provider } = await createConnectionInstance(chain, true)
+    const { web3, provider } = await createConnectionInstance(chain, true, null, this.infuraKey)
 
     if (!this.privateKey) {
       throw new Error('Please provide your Private Key')
@@ -611,6 +612,9 @@ class Wallet {
         if (valueDirect) {
           rawTransaction.value = valueDirect
         }
+
+        // delete rawTransaction.chainId
+        // delete rawTransaction.from
 
         if (gas) {
           rawTransaction.gasLimit = gas
