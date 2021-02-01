@@ -594,7 +594,6 @@ class Wallet {
       throw new Error('Please provide your Private Key')
     }
     const gasStation = new EtherGasStation({ apiServices: this.apiServices })
-    console.log('🚀 ~ file: Wallet.js ~ line 586 ~ Wallet ~ _postBaseSendTxs ~ gasStation', gasStation)
     const ethWallet = new ethers.Wallet(this.privateKey, provider)
     const nonce = await web3.eth.getTransactionCount(ethWallet.address)
     const gasWeb3 = await gasStation.getGasStationFull(chain)
