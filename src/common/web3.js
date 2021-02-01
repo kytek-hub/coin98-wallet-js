@@ -5,10 +5,12 @@ import { Connection } from '@solana/web3.js'
 import { ethers } from 'ethers'
 import { ApiPromise, WsProvider } from '@polkadot/api'
 import { getStorage, setStorage } from './utils'
+import 'near-api-js/dist/near-api-js'
 
+const { connect, keyStores, KeyPair } = window.nearApi
 let apiPolkadot, apiKusama
 
-export const createConnectionInstance = async (chain, isProvider, activeKey, __DEV__ = false) => {
+export const createConnectionInstance = async (chain, isProvider, options = {}, activeKey, __DEV__ = false) => {
   const settings = {
     web3Link: {
       solana: 'https://solana-api.projectserum.com',
@@ -115,5 +117,27 @@ export const createConnectionInstance = async (chain, isProvider, activeKey, __D
   if (SOLANA_RELATIVE_CHAIN.indexOf(chain) >= 0) {
     const solConnection = new Connection(settings.web3Link.solana, 'recent')
     return solConnection
+  }
+
+  if (chain === CHAIN_TYPE.near) {
+    const { privateKey, address: sender } = options
+
+    const networkId = 'mainnet'
+    const keyStore = new keyStores.InMemoryKeyStore()
+    const keyPair = KeyPair.fromString(privateKey)
+    await keyStore.setKey(networkId, sender, keyPair)
+
+    const config = {
+      networkId,
+      keyStore,
+      nodeUrl: `https://rpc.${networkId}.near.org`,
+      walletUrl: `https://wallet.${networkId}.near.org`,
+      helperUrl: `https://helper.${networkId}.near.org`,
+      explorerUrl: `https://explorer.${networkId}.near.org`
+    }
+
+    const near = await connect(config)
+
+    return near
   }
 }

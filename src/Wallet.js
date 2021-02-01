@@ -12,11 +12,13 @@ import { MIN_ABI, SUPPORTED_CHAIN, TOKEN_PROGRAM_ID } from './constants'
 import { ACCOUNT_LAYOUT, convertBalanceToWei, convertWeiToBalance, generateDataToken, getLength, sleep } from './common/utils'
 import { CHAIN_TYPE } from './constants/chain_supports'
 import { createConnectionInstance } from './common/web3'
-
-const bip39 = require('bip39')
-
 //* New Wallet with object = { mnemonic, privateKey }
+import 'near-api-js/dist/near-api-js'
 
+const { derivePath } = require('near-hd-key')
+const bip39 = require('bip39')
+const bs58 = require('bs58')
+const { KeyPair, utils } = window.nearApi
 class Wallet {
   constructor (defaults = { }) {
     // Local Properties
@@ -41,28 +43,27 @@ class Wallet {
     this._createDotWallet = this._createDotWallet.bind(this)
     this._createSolWallet = this._createSolWallet.bind(this)
     this._createDotWallet = this._createDotWallet.bind(this)
+    this._createNearWallet = this._createNearWallet.bind(this)
     this._getBalanceEthWallet = this._getBalanceEthWallet.bind(this)
     this._getBalanceDotWallet = this._getBalanceDotWallet.bind(this)
     this._getTokenBalanceSolWallet = this._getTokenBalanceSolWallet.bind(this)
     this._getTokenBalanceEthWallet = this._getTokenBalanceEthWallet.bind(this)
+    this._getBalanceNearWallet = this._getBalanceNearWallet.bind(this)
     this._sendFromEthWallet = this._sendFromEthWallet.bind(this)
     this._sendFromSolWallet = this._sendFromSolWallet.bind(this)
     this._sendFromDotWallet = this._sendFromDotWallet.bind(this)
+    this._sendFromNearWallet = this._sendFromNearWallet.bind(this)
 
     // Utils binding
     this._transfer = this._transfer.bind(this)
     this._encodeTokenInstructionData = this._encodeTokenInstructionData.bind(this)
     this._awaitTransactionSignatureConfirmation = this._awaitTransactionSignatureConfirmation.bind(this)
+    this._genNearKey = this._genNearKey.bind(this)
   }
 
   // * ---------
   // * Getter
   // * ---------
-
-  getChain () {
-    return this.chain
-  }
-
   getMnemonic () {
     return this.mnemonic
   }
@@ -176,7 +177,7 @@ class Wallet {
 
       return hash
     } catch (e) {
-      throw new Error('Send Errors', e.toString ? e.toString() : JSON.stringify(e))
+      throw new Error(e)
     }
   }
 
@@ -192,6 +193,12 @@ class Wallet {
       processPhrase = ethers.utils.HDNode.entropyToMnemonic(ethers.utils.randomBytes(16))
     }
 
+    let derivePath = "m/44'/60'/0'/0/0"
+
+    if (chain === CHAIN_TYPE.tomo) {
+      derivePath = 'm/44\'/889\'/0\'/0/0'
+    }
+
     let ethWallet
     if (privateKey) {
       const node = new ethers.Wallet(privateKey)
@@ -200,7 +207,7 @@ class Wallet {
     } else {
       const seed = await bip39.mnemonicToSeed(processPhrase)
       ethWallet = ethers.utils.HDNode.fromSeed(seed).derivePath(
-        options.derivePath || "m/44'/60'/0'/0/0"
+        options.derivePath || derivePath
       )
     }
 
@@ -219,6 +226,7 @@ class Wallet {
       this.web3 = await createConnectionInstance(
         CHAIN_TYPE.ether,
         false,
+        null,
         this.infuraKey,
         this.__DEV__
       )
@@ -238,6 +246,7 @@ class Wallet {
       this.web3 = await createConnectionInstance(
         CHAIN_TYPE.ether,
         false,
+        null,
         this.infuraKey,
         this.__DEV__
       )
@@ -268,6 +277,7 @@ class Wallet {
       this.web3 = await createConnectionInstance(
         chain,
         false,
+        null,
         this.infuraKey,
         this.__DEV__
       )
@@ -437,20 +447,6 @@ class Wallet {
       } catch (e) {
         throw new Error(e)
       }
-
-      // this.solanaConnection.sendTransaction(transaction, [account], { preflightCommitment: 'single' }).then(async (hash) => {
-      //   try {
-      //     await this._awaitTransactionSignatureConfirmation(hash)
-      //     Promise.resolve(hash)
-      //   } catch (error) {
-      //     Promise.reject(new Error('timeOutTxs'))
-      //     Promise.reject(error)
-      //   }
-      // })
-      //   .catch((err) => {
-      //     console.log(err)
-      //     Promise.reject(err)
-      //   })
     }
   }
 
@@ -507,7 +503,67 @@ class Wallet {
     }
   }
 
+  // Near
+  async _createNearWallet () {
+    const { publicKey, privateKey } = await this._genNearKey()
+    const recoveryKeyPair = KeyPair.fromString(privateKey)
+    const implicitAccountId = Buffer.from(recoveryKeyPair.publicKey.data).toString('hex')
+    return { privateKey, publicKey, depositAddress: implicitAccountId }
+  }
+
+  async _getBalanceNearWallet (address, chain) {
+    const { publicKey, privateKey } = await this._genNearKey()
+
+    const near = await createConnectionInstance(chain, false, {
+      privateKey,
+      publicKey,
+      address
+    })
+
+    const account = await near.account(address)
+
+    try {
+      const balance = await account.getAccountBalance()
+
+      return utils.format.formatNearAmount(balance.available || 0)
+    } catch (e) {
+      throw new Error(e)
+    }
+  }
+
+  async _sendFromNearWallet ({ toAddress, amount, chain }) {
+    const { publicKey, privateKey } = await this._genNearKey()
+
+    const address = KeyPair.fromString(privateKey)
+
+    const near = await createConnectionInstance(chain, false, {
+      privateKey,
+      publicKey,
+      address
+    })
+
+    const account = await near.account(address)
+
+    try {
+      const formatAmount = utils.format.parseNearAmount(amount.toString())
+      const txts = await account.sendMoney(toAddress, formatAmount)
+      return txts.transaction.hash
+    } catch (e) {
+      throw new Error(e)
+    }
+  }
+
   // Ultils Functions
+  async _genNearKey () {
+    const seed = await this._genSeed()
+    const NEAR_PATH = "m/44'/397'/0'"
+    const { key } = derivePath(NEAR_PATH, seed.toString('hex'))
+    const keyPairNear = nacl.sign.keyPair.fromSeed(key)
+    const publicKey = 'ed25519:' + bs58.encode(Buffer.from(keyPairNear.publicKey))
+    const privateKey = 'ed25519:' + bs58.encode(Buffer.from(keyPairNear.secretKey))
+
+    return { publicKey, privateKey }
+  }
 
   async _postBaseSendTxs (arrSend, isWaitDone, chain, onConfirmTracking) {
     const CHAIN_ID = { etherID: this.__DEV__ ? '0x4' : '0X1', binanceSmartID: '0X38' }
@@ -781,6 +837,8 @@ class Wallet {
       case CHAIN_TYPE.polkadot:
       case CHAIN_TYPE.kusama:
         return this[`_${action}DotWallet`]
+      case CHAIN_TYPE.near:
+        return this[`_${action}NearWallet`]
       default:
         throw new Error('Currently, we didn\'t support your input chain')
     }

@@ -26,5 +26,6 @@ export default [
   CHAIN_TYPE.solana,
   CHAIN_TYPE.polkadot,
   CHAIN_TYPE.kusama,
-  CHAIN_TYPE.heco
+  CHAIN_TYPE.heco,
+  CHAIN_TYPE.near
 ]
