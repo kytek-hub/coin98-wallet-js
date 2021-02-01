@@ -588,7 +588,7 @@ class Wallet {
   async _postBaseSendTxs (arrSend, isWaitDone, chain, onConfirmTracking) {
     const CHAIN_ID = { etherID: this.__DEV__ ? '0x4' : '0X1', binanceSmartID: '0X38' }
     //
-    const { web3, provider } = await createConnectionInstance(chain, true, null, this.infuraKey)
+    const { web3, provider } = await createConnectionInstance(chain, true, null, this.infuraKey, this.__DEV__)
 
     if (!this.privateKey) {
       throw new Error('Please provide your Private Key')
