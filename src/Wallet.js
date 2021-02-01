@@ -60,8 +60,6 @@ class Wallet {
     this._encodeTokenInstructionData = this._encodeTokenInstructionData.bind(this)
     this._awaitTransactionSignatureConfirmation = this._awaitTransactionSignatureConfirmation.bind(this)
     this._genNearKey = this._genNearKey.bind(this)
-
-    return this
   }
 
   // * ---------
@@ -191,12 +189,7 @@ class Wallet {
   // * Private method */
   // Ether Chain || Relative Ether Chain
   async _createEthWallet (chain, options) {
-    const { privateKey, mnemonic } = this
-    let processPhrase = mnemonic
-
-    if (!privateKey && !mnemonic) {
-      processPhrase = ethers.utils.HDNode.entropyToMnemonic(ethers.utils.randomBytes(16))
-    }
+    const { privateKey } = this
 
     let derivePath = "m/44'/60'/0'/0/0"
 
@@ -214,7 +207,7 @@ class Wallet {
 
       ethWallet = node.signingKey ? { ...node.signingKey } : node
     } else {
-      const seed = await bip39.mnemonicToSeed(processPhrase)
+      const seed = await this._genSeed()
       ethWallet = ethers.utils.HDNode.fromSeed(seed).derivePath(
         options.derivePath || derivePath
       )
@@ -226,7 +219,7 @@ class Wallet {
       this.mnemonic = ethWallet.mnemonic
     }
 
-    return { ...ethWallet, mnemonic: ethWallet.mnemonic || processPhrase, chain }
+    return { ...ethWallet, mnemonic: this.mnemonic, chain }
   }
 
   async _getBalanceEthWallet (address) {
@@ -337,7 +330,7 @@ class Wallet {
     const seed = await this._genSeed()
     const keyPair = nacl.sign.keyPair.fromSeed(seed.slice(0, 32))
     const node = new Account(keyPair.secretKey)
-    return { privateKey: node.secretKey.toString(), address: node.publicKey.toString(), chain }
+    return { privateKey: node.secretKey.toString(), address: node.publicKey.toString(), chain, mnemonic: this.mnemonic }
   }
 
   async _getBalanceSolWallet (address) {
@@ -467,7 +460,7 @@ class Wallet {
 
     const keyringPolkadot = new Keyring({ type: 'sr25519', ss58Format })
     const nodePolkadot = keyringPolkadot.addFromUri(otherMnemonic)
-    return { privateKey: '', address: nodePolkadot.address, chain }
+    return { privateKey: '', address: nodePolkadot.address, mnemonic: otherMnemonic, chain }
   }
 
   async _getBalanceDotWallet (address, chain) {
@@ -821,6 +814,7 @@ class Wallet {
 
   async _genSeed (returnProcess = false) {
     const { mnemonic } = this
+    console.log('🚀 ~ file: Wallet.js ~ line 824 ~ Wallet ~ _genSeed ~ mnemonic', mnemonic)
 
     const processMnemonic = mnemonic || ethers.utils.HDNode.entropyToMnemonic(ethers.utils.randomBytes(16))
 
