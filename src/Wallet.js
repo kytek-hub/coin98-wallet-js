@@ -333,11 +333,11 @@ class Wallet {
   }
 
   // Solana
-  async _createSolWallet () {
+  async _createSolWallet (chain) {
     const seed = await this._genSeed()
     const keyPair = nacl.sign.keyPair.fromSeed(seed.slice(0, 32))
     const node = new Account(keyPair.secretKey)
-    return { privateKey: node.secretKey.toString(), address: node.publicKey.toString(), chain: CHAIN_TYPE.solana }
+    return { privateKey: node.secretKey.toString(), address: node.publicKey.toString(), chain }
   }
 
   async _getBalanceSolWallet (address) {
