@@ -70,3 +70,15 @@ export const generateDataToken = (amount = 0, address) => {
     return transferOpCode + ABIValueToTransfer
   }
 }
+
+export const renderFormatWallet = ({ mnemonic, name, chain, address, privateKey, isMulti = false, isActive = true }) => {
+  return {
+    address,
+    privateKey,
+    mnemonic,
+    isMulti,
+    name,
+    isActive,
+    chain
+  }
+}

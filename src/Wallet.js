@@ -9,7 +9,7 @@ import converter from 'hex2dec'
 // Local Import
 import EtherGasStation from './EtherGasStation'
 import { MIN_ABI, SUPPORTED_CHAIN, TOKEN_PROGRAM_ID } from './constants'
-import { ACCOUNT_LAYOUT, convertBalanceToWei, convertWeiToBalance, generateDataToken, getLength, sleep } from './common/utils'
+import { ACCOUNT_LAYOUT, convertBalanceToWei, convertWeiToBalance, generateDataToken, getLength, sleep, renderFormatWallet } from './common/utils'
 import { CHAIN_TYPE } from './constants/chain_supports'
 import { createConnectionInstance } from './common/web3'
 //* New Wallet with object = { mnemonic, privateKey }
@@ -114,6 +114,8 @@ class Wallet {
 
     try {
       const createdWallet = await Promise.all(asyncCreate)
+
+      createdWallet.map(it => renderFormatWallet({ ...it, ...options }))
       // To object
       // Return value with callback
       if (typeof callback === 'function') {
