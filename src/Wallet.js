@@ -517,7 +517,7 @@ class Wallet {
     const { publicKey, privateKey } = await this._genNearKey()
     const recoveryKeyPair = KeyPair.fromString(privateKey)
     const implicitAccountId = Buffer.from(recoveryKeyPair.publicKey.data).toString('hex')
-    return { privateKey, publicKey, address: implicitAccountId }
+    return { privateKey, publicKey, address: implicitAccountId, mnemonic: this.mnemonic }
   }
 
   async _getBalanceNearWallet (address, chain) {
