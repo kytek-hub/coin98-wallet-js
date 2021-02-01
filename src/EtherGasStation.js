@@ -3,13 +3,12 @@ import { CHAIN_TYPE } from './constants/chain_supports'
 class EtherGasStation {
   constructor ({ apiServices }) {
     this.apiServices = apiServices
-
     this.getGasStationFull = this.getGasStationFull.bind(this)
     this.getGasStation = this.getGasStation.bind(this)
-    return this
+    this.getGasPrice = this.getGasPrice.bind(this)
   }
 
-  static getGasPrice () {
+  getGasPrice () {
     const possible = [10000000000]
     const results = possible.sort(function () {
       return 0.5 - Math.random()
@@ -17,7 +16,7 @@ class EtherGasStation {
     return results[0]
   }
 
-  static async getGasStationFull (chain) {
+  async getGasStationFull (chain) {
     if (chain === CHAIN_TYPE.binanceSmart) {
       const standard = 20
       return {
@@ -43,7 +42,7 @@ class EtherGasStation {
     return response
   }
 
-  static async getGasStation (chain) {
+  async getGasStation (chain) {
     const response =
       chain === CHAIN_TYPE.tomo
         ? { standard: 10 }

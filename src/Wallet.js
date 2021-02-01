@@ -563,6 +563,17 @@ class Wallet {
   }
 
   // Ultils Functions
+  async estimateGasTxs (rawTransaction, web3) {
+    // eslint-disable-next-line no-async-promise-executor
+    return new Promise(async (resolve, reject) => {
+      web3.eth.estimateGas(rawTransaction).then(res => {
+        resolve(res)
+      }).catch((err) => {
+        reject(err)
+      })
+    })
+  }
+
   async _genNearKey () {
     const seed = await this._genSeed()
     const NEAR_PATH = "m/44'/397'/0'"
@@ -583,6 +594,7 @@ class Wallet {
       throw new Error('Please provide your Private Key')
     }
     const gasStation = new EtherGasStation({ apiServices: this.apiServices })
+    console.log('🚀 ~ file: Wallet.js ~ line 586 ~ Wallet ~ _postBaseSendTxs ~ gasStation', gasStation)
     const ethWallet = new ethers.Wallet(this.privateKey, provider)
     const nonce = await web3.eth.getTransactionCount(ethWallet.address)
     const gasWeb3 = await gasStation.getGasStationFull(chain)
