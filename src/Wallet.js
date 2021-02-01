@@ -59,6 +59,8 @@ class Wallet {
     this._encodeTokenInstructionData = this._encodeTokenInstructionData.bind(this)
     this._awaitTransactionSignatureConfirmation = this._awaitTransactionSignatureConfirmation.bind(this)
     this._genNearKey = this._genNearKey.bind(this)
+
+    return this
   }
 
   // * ---------
@@ -199,6 +201,10 @@ class Wallet {
 
     if (chain === CHAIN_TYPE.tomo) {
       derivePath = 'm/44\'/889\'/0\'/0/0'
+    }
+
+    if (chain === CHAIN_TYPE.avax) {
+      derivePath = 'm/44\'/9000\'/0\'/0/0'
     }
 
     let ethWallet
@@ -833,6 +839,8 @@ class Wallet {
       case CHAIN_TYPE.heco:
       case CHAIN_TYPE.binanceSmart:
       case CHAIN_TYPE.binance:
+      case CHAIN_TYPE.avax:
+      case CHAIN_TYPE.tomo:
         return this[`_${action}EthWallet`]
       case CHAIN_TYPE.solana:
         return this[`_${action}SolWallet`]

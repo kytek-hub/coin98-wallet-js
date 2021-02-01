@@ -23,9 +23,11 @@ export const CHAIN_TYPE = {
 export default [
   CHAIN_TYPE.ether,
   CHAIN_TYPE.binanceSmart,
+  CHAIN_TYPE.heco,
+  CHAIN_TYPE.avax,
+  CHAIN_TYPE.tomo,
   CHAIN_TYPE.solana,
   CHAIN_TYPE.polkadot,
   CHAIN_TYPE.kusama,
-  CHAIN_TYPE.heco,
   CHAIN_TYPE.near
 ]
