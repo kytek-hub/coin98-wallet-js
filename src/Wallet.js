@@ -118,14 +118,14 @@ class Wallet {
     try {
       const createdWallet = await Promise.all(asyncCreate)
 
-      createdWallet.map(it => renderFormatWallet({ ...it, ...options }))
+      const wallets = [...createdWallet].map(it => renderFormatWallet({ ...it, ...options }))
       // To object
       // Return value with callback
       if (typeof callback === 'function') {
-        callback(createdWallet)
+        callback(wallets)
       }
       // Return for async call
-      return createdWallet
+      return wallets
     } catch (e) {
       throw new Error(e.toString())
     }
