@@ -20,7 +20,13 @@ const bip39 = require('bip39')
 const bs58 = require('bs58')
 const { KeyPair, utils } = window.nearApi
 class Wallet {
-  constructor (defaults = { }) {
+  constructor (defaults = {
+    mnemonic: null,
+    privateKey: null,
+    isDev: false,
+    apiServices: null,
+    infuraKey: null
+  }) {
     // Local Properties
     this.mnemonic = defaults.mnemonic
     this.privateKey = defaults.privateKey
@@ -576,10 +582,10 @@ class Wallet {
     if (!this.privateKey) {
       throw new Error('Please provide your Private Key')
     }
-
+    const gasStation = new EtherGasStation({ apiServices: this.apiServices })
     const ethWallet = new ethers.Wallet(this.privateKey, provider)
     const nonce = await web3.eth.getTransactionCount(ethWallet.address)
-    const gasWeb3 = await EtherGasStation.getGasStationFull(chain)
+    const gasWeb3 = await gasStation.getGasStationFull(chain)
     let gasPriceDefault = gasWeb3 ? Number(gasWeb3.standard) : null
     gasPriceDefault = converter.decToHex((gasPriceDefault ? convertBalanceToWei(gasPriceDefault, 9) : convertBalanceToWei(25, 9)))
     const promise = arrSend.map(async (item, index) => {
