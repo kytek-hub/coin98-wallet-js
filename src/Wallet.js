@@ -814,7 +814,6 @@ class Wallet {
 
   async _genSeed (returnProcess = false) {
     const { mnemonic } = this
-    console.log('🚀 ~ file: Wallet.js ~ line 824 ~ Wallet ~ _genSeed ~ mnemonic', mnemonic)
 
     const processMnemonic = mnemonic || ethers.utils.HDNode.entropyToMnemonic(ethers.utils.randomBytes(16))
 
