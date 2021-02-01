@@ -24,6 +24,7 @@ class Wallet {
     // Local Properties
     this.mnemonic = defaults.mnemonic
     this.privateKey = defaults.privateKey
+    this.seed = null
     this.__DEV__ = defaults.isDev || false
     this.apiServices = defaults.apiServices || null
     this.infuraKey = defaults.infuraKey || '8bc501492617482da2029e9b84465030'
@@ -828,7 +829,17 @@ class Wallet {
     if (returnProcess) {
       return processMnemonic
     }
+
+    if (this.seed && this.seed.mnemonic === mnemonic) {
+      return this.seed.seed
+    }
+
     const seed = await bip39.mnemonicToSeed(processMnemonic)
+
+    this.seed = {
+      seed,
+      mnemonic: processMnemonic
+    }
 
     return seed
   }
