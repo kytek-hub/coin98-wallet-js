@@ -250,11 +250,11 @@ class Wallet {
     }
   }
 
-  async _getTokenBalanceEthWallet ({ contractAddress, address, decimalToken }) {
+  async _getTokenBalanceEthWallet ({ contractAddress, address, decimalToken, chain }) {
     // Generate Web3
     if (!this.web3) {
       this.web3 = await createConnectionInstance(
-        CHAIN_TYPE.ether,
+        chain,
         false,
         null,
         this.infuraKey,
@@ -264,21 +264,23 @@ class Wallet {
 
     const contract = new this.web3.eth.Contract(MIN_ABI, contractAddress)
 
-    contract.methods.balanceOf(address).call().then(balance => {
-      if (decimalToken) {
-        const tokenBalance = convertWeiToBalance(balance, decimalToken)
-        return tokenBalance
-      } else {
-        contract.methods.decimals().call().then(decimal => {
-          const tokenBalance = convertWeiToBalance(balance, decimal)
-          return tokenBalance
-        }).catch(() => {
-          const tokenBalance = convertWeiToBalance(balance, 18)
-          return tokenBalance
-        })
-      }
-    }).catch((e) => {
-      return 0
+    return new Promise((resolve) => {
+      contract.methods.balanceOf(address).call().then(balance => {
+        if (decimalToken) {
+          const tokenBalance = convertWeiToBalance(balance, decimalToken)
+          resolve(tokenBalance)
+        } else {
+          contract.methods.decimals().call().then(decimal => {
+            const tokenBalance = convertWeiToBalance(balance, decimal)
+            resolve(tokenBalance)
+          }).catch(() => {
+            const tokenBalance = convertWeiToBalance(balance, 18)
+            resolve(tokenBalance)
+          })
+        }
+      }).catch((e) => {
+        resolve(0)
+      })
     })
   }
 
