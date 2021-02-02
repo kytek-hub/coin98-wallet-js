@@ -230,11 +230,11 @@ class Wallet {
     return { ...ethWallet, mnemonic: this.mnemonic, chain }
   }
 
-  async _getBalanceEthWallet (address) {
+  async _getBalanceEthWallet (address, chain) {
     // Generate Web3
     if (!this.web3) {
       this.web3 = await createConnectionInstance(
-        CHAIN_TYPE.ether,
+        chain,
         false,
         null,
         this.infuraKey,
