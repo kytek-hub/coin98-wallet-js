@@ -13,11 +13,13 @@ import { ACCOUNT_LAYOUT, convertBalanceToWei, convertWeiToBalance, generateDataT
 import { CHAIN_TYPE } from './constants/chain_supports'
 import { createConnectionInstance } from './common/web3'
 //* New Wallet with object = { mnemonic, privateKey }
+import tronWeb from 'tronweb'
 import 'near-api-js/dist/near-api-js'
 
 const { derivePath } = require('near-hd-key')
 const bip39 = require('bip39')
 const bs58 = require('bs58')
+
 const { KeyPair, utils } = window.nearApi
 class Wallet {
   constructor (defaults = {
@@ -209,6 +211,10 @@ class Wallet {
       derivePath = 'm/44\'/9000\'/0\'/0/0'
     }
 
+    if (chain === CHAIN_TYPE.celo) {
+      derivePath = 'm/44\'/52752\'/0\'/0/0'
+    }
+
     let ethWallet
     if (privateKey) {
       const node = new ethers.Wallet(privateKey)
@@ -219,6 +225,11 @@ class Wallet {
       ethWallet = ethers.utils.HDNode.fromSeed(seed).derivePath(
         options.derivePath || derivePath
       )
+      if (chain === CHAIN_TYPE.tron) {
+        const tronPrivateKey = ethWallet.privateKey.substring(2, 66)
+        const tronAddress = tronWeb.address.fromPrivateKey(tronPrivateKey)
+        ethWallet = { privateKey: tronPrivateKey, address: tronAddress }
+      }
     }
 
     this.privateKey = ethWallet.privateKey
@@ -857,6 +868,8 @@ class Wallet {
       case CHAIN_TYPE.binance:
       case CHAIN_TYPE.avax:
       case CHAIN_TYPE.tomo:
+      case CHAIN_TYPE.celo:
+      case CHAIN_TYPE.tron:
         return this[`_${action}EthWallet`]
       case CHAIN_TYPE.solana:
         return this[`_${action}SolWallet`]
