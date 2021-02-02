@@ -325,7 +325,7 @@ class Wallet {
       }
 
       if (gas) {
-        generateTxs.gas = convertBalanceToWei(gas, 9)
+        generateTxs.gasPrice = convertBalanceToWei(gas, 9)
       }
 
       const result = await this._postBaseSendTxs([generateTxs], false, chain)
