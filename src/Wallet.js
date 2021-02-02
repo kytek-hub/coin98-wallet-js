@@ -420,20 +420,6 @@ class Wallet {
       } catch (e) {
         throw new Error(e)
       }
-
-      // this.solanaConnection.sendTransaction(transaction, [account], { preflightCommitment: 'single' }).then(async (hash) => {
-      //   try {
-      //     await this._awaitTransactionSignatureConfirmation(hash)
-      //     Promise.resolve(hash)
-      //   } catch (error) {
-      //     // reject(timeOutTxs)
-      //     Promise.reject(error)
-      //   }
-      // })
-      //   .catch((err) => {
-      //     console.log(err)
-      //     Promise.reject(err)
-      //   })
     } else {
       let transaction
       try {
@@ -503,7 +489,7 @@ class Wallet {
         const { data: balance } = await polkadotApi.query.system.account(toAddress)
         const toBalance = parseFloat(convertWeiToBalance(balance.free, isKSM ? 12 : 10))
         if ((toBalance + parseFloat(amount)) <= 1) {
-          throw new Error('Minimun1DOT')
+          throw new Error('minimum1Polkadot')
         }
       }
       const transfer = polkadotApi.tx.balances.transfer(toAddress, convertBalanceToWei(amount, isKSM ? 12 : 10))
@@ -638,10 +624,6 @@ class Wallet {
         if (valueDirect) {
           rawTransaction.value = valueDirect
         }
-
-        // delete rawTransaction.chainId
-        // delete rawTransaction.from
-
         if (gas) {
           rawTransaction.gasLimit = gas
 
