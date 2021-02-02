@@ -589,7 +589,13 @@ class Wallet {
   }
 
   async _postBaseSendTxs (arrSend, isWaitDone, chain, onConfirmTracking) {
-    const CHAIN_ID = { etherID: this.__DEV__ ? '0x4' : '0x1', binanceSmartID: '0x38' }
+    const CHAIN_ID = {
+      [`${CHAIN_TYPE.avax}ID`]: `0xa86${this.__DEV__ ? 'a' : '9'}`,
+      [`${CHAIN_TYPE.tomo}ID`]: `0x${this.__DEV__ ? '88' : '89'}`,
+      [`${CHAIN_TYPE.ether}ID`]: this.__DEV__ ? '0x4' : '0x1',
+      [`${CHAIN_TYPE.heco}ID`]: `0x${this.__DEV__ ? '256' : '128'}`,
+      [`${CHAIN_TYPE.binanceSmart}ID`]: '0x38'
+    }
     //
     const { web3, provider } = await createConnectionInstance(chain, true, null, this.infuraKey, this.__DEV__)
 

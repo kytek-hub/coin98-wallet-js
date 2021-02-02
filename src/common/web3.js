@@ -26,7 +26,7 @@ export const createConnectionInstance = async (chain, isProvider, options = {}, 
       [`${CHAIN_TYPE.tomo}ID`]: `0x${__DEV__ ? '88' : '89'}`,
       [`${CHAIN_TYPE.ether}ID`]: __DEV__ ? '0x4' : '0x1',
       [`${CHAIN_TYPE.heco}ID`]: `0x${__DEV__ ? '256' : '128'}`,
-      binanceSmartID: '0x38'
+      [`${CHAIN_TYPE.binanceSmart}ID`]: '0x38'
     },
     gas: {
       ETH: 21000,
