@@ -22,7 +22,8 @@ export const createConnectionInstance = async (chain, isProvider, options = {}, 
       [CHAIN_TYPE.polkadot]: 'rpc.polkadot.io',
       [CHAIN_TYPE.kusama]: 'kusama-rpc.polkadot.io',
 
-      [`${CHAIN_TYPE.tomo}ID`]: '0x89',
+      [`${CHAIN_TYPE.avax}ID`]: `0xa86${__DEV__ ? 'a' : '9'}`,
+      [`${CHAIN_TYPE.tomo}ID`]: `0x${__DEV__ ? '88' : '89'}`,
       [`${CHAIN_TYPE.ether}ID`]: __DEV__ ? '0x4' : '0x1',
       [`${CHAIN_TYPE.heco}ID`]: `0x${__DEV__ ? '256' : '128'}`,
       binanceSmartID: '0x38'
