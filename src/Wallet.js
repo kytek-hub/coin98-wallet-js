@@ -232,8 +232,8 @@ class Wallet {
 
   async _getBalanceEthWallet (address, chain) {
     // Generate Web3
-    if (!this.web3) {
-      this.web3 = await createConnectionInstance(
+    if (!this[chain]) {
+      this[chain] = await createConnectionInstance(
         chain,
         false,
         null,
@@ -243,7 +243,7 @@ class Wallet {
     }
 
     try {
-      const balance = await this.web3.eth.getBalance(address)
+      const balance = await this[chain].eth.getBalance(address)
       return convertWeiToBalance(balance)
     } catch (e) {
       throw new Error(e)
@@ -252,8 +252,8 @@ class Wallet {
 
   async _getTokenBalanceEthWallet ({ contractAddress, address, decimalToken, chain }) {
     // Generate Web3
-    if (!this.web3) {
-      this.web3 = await createConnectionInstance(
+    if (!this[chain]) {
+      this[chain] = await createConnectionInstance(
         chain,
         false,
         null,
@@ -262,7 +262,7 @@ class Wallet {
       )
     }
 
-    const contract = new this.web3.eth.Contract(MIN_ABI, contractAddress)
+    const contract = new this[chain].eth.Contract(MIN_ABI, contractAddress)
 
     return new Promise((resolve) => {
       contract.methods.balanceOf(address).call().then(balance => {
@@ -285,8 +285,8 @@ class Wallet {
   }
 
   async _sendFromEthWallet ({ toAddress, amount, sendContract, gas, chain }) {
-    if (!this.web3) {
-      this.web3 = await createConnectionInstance(
+    if (!this[chain]) {
+      this[chain] = await createConnectionInstance(
         chain,
         false,
         null,
@@ -301,7 +301,7 @@ class Wallet {
       let dataForSend = ''
 
       if (!contract) {
-        const isETH = await this.web3.eth.getCode(toAddress) === '0x'
+        const isETH = await this[chain].eth.getCode(toAddress) === '0x'
         isETHContract = true
         if (!isETH) {
           contract = {
