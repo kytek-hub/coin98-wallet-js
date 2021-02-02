@@ -370,7 +370,7 @@ class Wallet {
       if (findAccount) {
         const { amount } = this._parseTokenAccountData(findAccount.account.data)
         const amountToken = convertWeiToBalance(amount, token.decimal)
-        return { address: findAccount.pubkey.toString(), amount: amountToken }
+        return amountToken
       } else {
         return 0
       }
