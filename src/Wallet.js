@@ -556,7 +556,8 @@ class Wallet {
   async _sendFromNearWallet ({ toAddress, amount, chain }) {
     const { publicKey, privateKey } = await this._genNearKey()
 
-    const address = KeyPair.fromString(privateKey)
+    const recoveryKeyPair = KeyPair.fromString(privateKey)
+    const address = Buffer.from(recoveryKeyPair.publicKey.data).toString('hex')
 
     const near = await createConnectionInstance(chain, false, {
       privateKey,
