@@ -255,7 +255,8 @@ class Wallet {
         false,
         null,
         this.infuraKey,
-        this.__DEV__
+        this.__DEV__,
+        this.__ETHER__
       )
     }
 
@@ -275,7 +276,8 @@ class Wallet {
         false,
         null,
         this.infuraKey,
-        this.__DEV__
+        this.__DEV__,
+        this.this.__ETHER__
       )
     }
 
@@ -308,7 +310,8 @@ class Wallet {
         false,
         null,
         this.infuraKey,
-        this.__DEV__
+        this.__DEV__,
+        this.__ETHER__
       )
     }
 
@@ -725,7 +728,7 @@ class Wallet {
     const CHAIN_ID = {
       [`${CHAIN_TYPE.avax}ID`]: `0xa86${this.__DEV__ ? 'a' : '9'}`,
       [`${CHAIN_TYPE.tomo}ID`]: `0x${this.__DEV__ ? '88' : '89'}`,
-      [`${CHAIN_TYPE.ether}ID`]: this.__ETHER__ ? '0x4' : '0x1',
+      [`${CHAIN_TYPE.ether}ID`]: this.__DEV__ || this.__ETHER__ ? '0x4' : '0x1',
       [`${CHAIN_TYPE.heco}ID`]: `0x${this.__DEV__ ? '256' : '128'}`,
       [`${CHAIN_TYPE.binanceSmart}ID`]: '0x38'
     }
