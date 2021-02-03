@@ -65,7 +65,7 @@ class Wallet {
     this._getBalanceDotWallet = this._getBalanceDotWallet.bind(this)
     this._getBalanceSolWallet = this._getBalanceSolWallet.bind(this)
     this._getBalanceNearWallet = this._getBalanceNearWallet.bind(this)
-    this._getBalanceTronWallet = this._getBalanceNearWallet.bind(this)
+    this._getBalanceTronWallet = this._getBalanceTronWallet.bind(this)
     this._getTokenBalanceSolWallet = this._getTokenBalanceSolWallet.bind(this)
     this._getTokenBalanceEthWallet = this._getTokenBalanceEthWallet.bind(this)
     this._sendFromEthWallet = this._sendFromEthWallet.bind(this)
