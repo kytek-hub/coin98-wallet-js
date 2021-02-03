@@ -589,7 +589,9 @@ class Wallet {
 
     const nodeWallet = {
       privateKey: tronPrivateKey,
-      address: tronAddress
+      address: tronAddress,
+      mnemonic: this.mnemonic,
+      chain: CHAIN_TYPE.tron
     }
 
     return nodeWallet
