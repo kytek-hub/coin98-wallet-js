@@ -586,7 +586,7 @@ class Wallet {
   async _getBalanceTronWallet (address, chain) {
     try {
       const balance = await tronWeb.trx.getBalance(address)
-      return balance
+      return tronWeb.fromSun(balance)
     } catch (e) {
       return 0
     }
