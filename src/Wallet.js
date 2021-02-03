@@ -32,6 +32,7 @@ class Wallet {
     mnemonic: null,
     privateKey: null,
     isDev: false,
+    isDevEther: false,
     apiServices: null,
     infuraKey: null
   }) {
@@ -40,6 +41,7 @@ class Wallet {
     this.privateKey = defaults.privateKey
     this.seed = null
     this.__DEV__ = defaults.isDev || false
+    this.__ETHER__ = defaults.isDevEther || false
     this.apiServices = defaults.apiServices || null
     this.infuraKey = defaults.infuraKey || '8bc501492617482da2029e9b84465030'
     this.web3 = null
@@ -723,7 +725,7 @@ class Wallet {
     const CHAIN_ID = {
       [`${CHAIN_TYPE.avax}ID`]: `0xa86${this.__DEV__ ? 'a' : '9'}`,
       [`${CHAIN_TYPE.tomo}ID`]: `0x${this.__DEV__ ? '88' : '89'}`,
-      [`${CHAIN_TYPE.ether}ID`]: this.__DEV__ ? '0x4' : '0x1',
+      [`${CHAIN_TYPE.ether}ID`]: this.__ETHER__ ? '0x4' : '0x1',
       [`${CHAIN_TYPE.heco}ID`]: `0x${this.__DEV__ ? '256' : '128'}`,
       [`${CHAIN_TYPE.binanceSmart}ID`]: '0x38'
     }

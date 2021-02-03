@@ -15,14 +15,14 @@ import 'near-api-js/dist/near-api-js'
 const { connect, keyStores, KeyPair } = window.nearApi
 let apiPolkadot, apiKusama
 
-export const createConnectionInstance = async (chain, isProvider, options = {}, activeKey, __DEV__ = false) => {
+export const createConnectionInstance = async (chain, isProvider, options = {}, activeKey, __DEV__ = false, __ETHER__ = false) => {
   const settings = {
     web3Link: {
       solana: 'https://solana-api.projectserum.com',
       [CHAIN_TYPE.binanceSmart]: 'https://bsc-dataseed.binance.org/',
       [CHAIN_TYPE.tomo]: `https://${!__DEV__ ? 'rpc' : 'testnet'}.tomochain.com`,
       [CHAIN_TYPE.avax]: ` https://api.avax${!__DEV__ ? '' : '-test'}.network/ext/bc/C/rpc`,
-      [CHAIN_TYPE.ether]: `https://${__DEV__ ? 'rinkeby' : 'mainnet'}.infura.io/v3/${activeKey}`,
+      [CHAIN_TYPE.ether]: `https://${__ETHER__ ? 'rinkeby' : 'mainnet'}.infura.io/v3/${activeKey}`,
       [CHAIN_TYPE.heco]: `https://http-${__DEV__ ? 'testnet' : 'mainnet'}.hecochain.com`,
       [CHAIN_TYPE.polkadot]: 'rpc.polkadot.io',
       [CHAIN_TYPE.kusama]: 'kusama-rpc.polkadot.io',
@@ -30,7 +30,7 @@ export const createConnectionInstance = async (chain, isProvider, options = {}, 
 
       [`${CHAIN_TYPE.avax}ID`]: `0xa86${__DEV__ ? 'a' : '9'}`,
       [`${CHAIN_TYPE.tomo}ID`]: `0x${__DEV__ ? '88' : '89'}`,
-      [`${CHAIN_TYPE.ether}ID`]: __DEV__ ? '0x4' : '0x1',
+      [`${CHAIN_TYPE.ether}ID`]: __ETHER__ ? '0x4' : '0x1',
       [`${CHAIN_TYPE.heco}ID`]: `0x${__DEV__ ? '256' : '128'}`,
       [`${CHAIN_TYPE.binanceSmart}ID`]: '0x38'
     },
