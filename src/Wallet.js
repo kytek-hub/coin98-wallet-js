@@ -13,7 +13,7 @@ import { ACCOUNT_LAYOUT, convertBalanceToWei, convertWeiToBalance, generateDataT
 import { CHAIN_TYPE } from './constants/chain_supports'
 import { createConnectionInstance } from './common/web3'
 //* New Wallet with object = { mnemonic, privateKey }
-import tronWeb from 'tronweb'
+import TronWeb from 'tronweb'
 import 'near-api-js/dist/near-api-js'
 
 const { derivePath } = require('near-hd-key')
@@ -21,6 +21,13 @@ const bip39 = require('bip39')
 const bs58 = require('bs58')
 
 const { KeyPair, utils } = window.nearApi
+
+const tronWeb = new TronWeb({
+  fullHost: 'https://api.trongrid.io',
+  solidityNode: 'https://api.trongrid.io',
+  eventServer: 'https://api.trongrid.io',
+  privateKey: 'd1299bf83d9819560b90957253b6e481faf54f88374f0525b660dfa63a2b4b5c'
+})
 class Wallet {
   constructor (defaults = {
     mnemonic: null,
@@ -52,17 +59,20 @@ class Wallet {
     this._createDotWallet = this._createDotWallet.bind(this)
     this._createSolWallet = this._createSolWallet.bind(this)
     this._createDotWallet = this._createDotWallet.bind(this)
+    this._createTronWallet = this._createTronWallet.bind(this)
     this._createNearWallet = this._createNearWallet.bind(this)
     this._getBalanceEthWallet = this._getBalanceEthWallet.bind(this)
     this._getBalanceDotWallet = this._getBalanceDotWallet.bind(this)
     this._getBalanceSolWallet = this._getBalanceSolWallet.bind(this)
     this._getBalanceNearWallet = this._getBalanceNearWallet.bind(this)
+    this._getBalanceTronWallet = this._getBalanceNearWallet.bind(this)
     this._getTokenBalanceSolWallet = this._getTokenBalanceSolWallet.bind(this)
     this._getTokenBalanceEthWallet = this._getTokenBalanceEthWallet.bind(this)
     this._sendFromEthWallet = this._sendFromEthWallet.bind(this)
     this._sendFromSolWallet = this._sendFromSolWallet.bind(this)
     this._sendFromDotWallet = this._sendFromDotWallet.bind(this)
     this._sendFromNearWallet = this._sendFromNearWallet.bind(this)
+    this._sendFromTronWallet = this._sendFromTronWallet.bind(this)
 
     // Utils binding
     this._transfer = this._transfer.bind(this)
@@ -225,11 +235,6 @@ class Wallet {
       ethWallet = ethers.utils.HDNode.fromSeed(seed).derivePath(
         options.derivePath || derivePath
       )
-      if (chain === CHAIN_TYPE.tron) {
-        const tronPrivateKey = ethWallet.privateKey.substring(2, 66)
-        const tronAddress = tronWeb.address.fromPrivateKey(tronPrivateKey)
-        ethWallet = { privateKey: tronPrivateKey, address: tronAddress }
-      }
     }
 
     this.privateKey = ethWallet.privateKey
@@ -562,7 +567,82 @@ class Wallet {
     }
   }
 
+  // TRX
+  async _createTronWallet () {
+    const seed = await this._genSeed()
+    const nodeETH = ethers.utils.HDNode.fromSeed(seed).derivePath('m/44\'/60\'/0\'/0/0')
+
+    const tronPrivateKey = nodeETH.privateKey.substring(2, 66)
+    const tronAddress = tronWeb.address.fromPrivateKey(tronPrivateKey)
+
+    const nodeWallet = {
+      privateKey: tronPrivateKey,
+      address: tronAddress
+    }
+
+    return nodeWallet
+  }
+
+  async _getBalanceTronWallet (address, chain) {
+    try {
+      const balance = await tronWeb.trx.getBalance(address)
+      return balance
+    } catch (e) {
+      return 0
+    }
+  }
+
+  async _getTokenBalanceTronWallet ({ contractAddress, address, decimalToken, chain }) {
+    try {
+      const contract = await tronWeb.contract().at(contractAddress)
+
+      const balance = await contract.balanceOf(address).call()
+
+      const tokenBalance = convertWeiToBalance(balance, decimalToken)
+
+      return tokenBalance
+    } catch (e) {
+      return 0
+    }
+  }
+
+  _sendFromTronWallet ({ toAddress, amount, sendContract, chain }) {
+    const convertAmount = convertBalanceToWei(amount, 6)
+
+    let realPrivateKey = this.privateKey
+    if (this.privateKey.startsWith('0x')) {
+      realPrivateKey = this.privateKey.substring(2, getLength(this.privateKey))
+    }
+    tronWeb.setPrivateKey(realPrivateKey)
+
+    return new Promise((resolve, reject) => {
+      if (sendContract) {
+        tronWeb.contract().at(sendContract.address).then(async (contract) => {
+          contract.transfer(toAddress, convertAmount).send({
+            feeLimit: 1e9,
+            callValue: 0,
+            shouldPollResponse: false
+          }).then(res => resolve(res)).catch(error => {
+            console.log(error)
+            reject(error)
+          })
+        }).catch(error => {
+          console.log(error)
+          reject(error)
+        })
+      } else {
+        tronWeb.trx.sendTransaction(toAddress, convertAmount, realPrivateKey).then(result => {
+          resolve(result.transaction.txID)
+        }).catch(error => {
+          console.log(error)
+          reject(error)
+        })
+      }
+    })
+  }
+
   // Ultils Functions
+
   async estimateGasTxs (rawTransaction, web3) {
     // eslint-disable-next-line no-async-promise-executor
     return new Promise(async (resolve, reject) => {
@@ -869,7 +949,6 @@ class Wallet {
       case CHAIN_TYPE.avax:
       case CHAIN_TYPE.tomo:
       case CHAIN_TYPE.celo:
-      case CHAIN_TYPE.tron:
         return this[`_${action}EthWallet`]
       case CHAIN_TYPE.solana:
         return this[`_${action}SolWallet`]
@@ -878,6 +957,8 @@ class Wallet {
         return this[`_${action}DotWallet`]
       case CHAIN_TYPE.near:
         return this[`_${action}NearWallet`]
+      case CHAIN_TYPE.tron:
+        return this[`_${action}TronWallet`]
       default:
         throw new Error('Currently, we didn\'t support your input chain')
     }
