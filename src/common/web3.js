@@ -5,7 +5,13 @@ import { Connection } from '@solana/web3.js'
 import { ethers } from 'ethers'
 import { ApiPromise, WsProvider } from '@polkadot/api'
 import { getStorage, setStorage } from './utils'
+import { newKit } from '@celo/contractkit'
+import { BncClient } from 'binance-chain/lib'
 import 'near-api-js/dist/near-api-js'
+
+const bnbClient = new BncClient('https://dex.binance.org/')
+bnbClient.chooseNetwork('mainnet')
+bnbClient.initChain()
 
 const { connect, keyStores, KeyPair } = window.nearApi
 let apiPolkadot, apiKusama
@@ -21,6 +27,7 @@ export const createConnectionInstance = async (chain, isProvider, options = {}, 
       [CHAIN_TYPE.heco]: `https://http-${__DEV__ ? 'testnet' : 'mainnet'}.hecochain.com`,
       [CHAIN_TYPE.polkadot]: 'rpc.polkadot.io',
       [CHAIN_TYPE.kusama]: 'kusama-rpc.polkadot.io',
+      [CHAIN_TYPE.celo]: 'https://rc1-forno.celo-testnet.org',
 
       [`${CHAIN_TYPE.avax}ID`]: `0xa86${__DEV__ ? 'a' : '9'}`,
       [`${CHAIN_TYPE.tomo}ID`]: `0x${__DEV__ ? '88' : '89'}`,
@@ -142,5 +149,14 @@ export const createConnectionInstance = async (chain, isProvider, options = {}, 
     const near = await connect(config)
 
     return near
+  }
+
+  if (chain === CHAIN_TYPE.celo) {
+    const kitCelo = newKit(settings.web3Link[chain]).web3
+    return kitCelo
+  }
+
+  if (chain === CHAIN_TYPE.binance) {
+    return bnbClient
   }
 }

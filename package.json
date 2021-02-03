@@ -18,6 +18,8 @@
     "eslint-plugin-promise": "^4.2.1"
   },
   "dependencies": {
+    "@binance-chain/javascript-sdk": "github:kytek-hub/binance-chain",
+    "@celo/contractkit": "^1.0.1",
     "@polkadot/api": "^3.6.4",
     "@polkadot/keyring": "^5.4.4",
     "@project-serum/serum": "^0.13.19",

@@ -12,16 +12,17 @@ import { MIN_ABI, SUPPORTED_CHAIN, TOKEN_PROGRAM_ID } from './constants'
 import { ACCOUNT_LAYOUT, convertBalanceToWei, convertWeiToBalance, generateDataToken, getLength, sleep, renderFormatWallet } from './common/utils'
 import { CHAIN_TYPE } from './constants/chain_supports'
 import { createConnectionInstance } from './common/web3'
-//* New Wallet with object = { mnemonic, privateKey }
 import TronWeb from 'tronweb'
 import 'near-api-js/dist/near-api-js'
+import { newKit, CeloContract } from '@celo/contractkit'
 
 const { derivePath } = require('near-hd-key')
 const bip39 = require('bip39')
 const bs58 = require('bs58')
-
+const bip32 = require('bip32')
 const { KeyPair, utils } = window.nearApi
 
+//* New Wallet with object = { mnemonic, privateKey }
 const tronWeb = new TronWeb({
   fullHost: 'https://api.trongrid.io',
   solidityNode: 'https://api.trongrid.io',
@@ -342,6 +343,13 @@ class Wallet {
 
       if (gas) {
         generateTxs.gasPrice = convertBalanceToWei(gas, 9)
+        if (chain === CHAIN_TYPE.celo) {
+          generateTxs.celoTxs = {
+            to: toAddress,
+            isToken: !!contract,
+            amount: convertBalanceToWei(amount, contract ? contract.decimal : 18)
+          }
+        }
       }
 
       const result = await this._postBaseSendTxs([generateTxs], false, chain)
@@ -606,7 +614,7 @@ class Wallet {
     }
   }
 
-  _sendFromTronWallet ({ toAddress, amount, sendContract, chain }) {
+  _sendFromTronWallet ({ toAddress, amount, sendContract }) {
     const convertAmount = convertBalanceToWei(amount, 6)
 
     let realPrivateKey = this.privateKey
@@ -638,6 +646,53 @@ class Wallet {
           reject(error)
         })
       }
+    })
+  }
+
+  //* *** Binance */
+  async _createBinanceWallet () {
+    const seed = await this._genSeed()
+    const master = bip32.fromSeed(seed)
+    const nodeBNB = master.derivePath('44\'/714\'/0\'/0/0')
+    const bnbPrivateKey = nodeBNB.privateKey.toString('hex')
+    const bnbAddress = this.getAddressFromPublicKey(bnbPrivateKey)
+    const nodeWallet = {
+      privateKey: bnbPrivateKey,
+      address: bnbAddress
+    }
+
+    return nodeWallet
+  }
+
+  async _getBalanceBinanceWallet (address, chain) {
+    const bnbClient = await createConnectionInstance(chain)
+    const balance = await bnbClient.getBalance(address)
+    if (getLength(balance) > 0) {
+      const findBNB = balance.find(item => item.symbol === 'BNB')
+      return (findBNB.free)
+    } else {
+      return 0
+    }
+  }
+
+  _getTokenBalanceBinanceWallet () {}
+
+  async _sendFromBinanceWallet ({ toAddress, amount, sendContract, chain }) {
+    const bnbClient = await createConnectionInstance(chain)
+    const bnbAccount = bnbClient.recoverAccountFromPrivateKey(this.privateKey)
+    bnbClient.setPrivateKey(this.privateKey)
+    return new Promise((resolve, reject) => {
+      bnbClient.transfer(bnbAccount.address, toAddress, parseFloat(amount), 'BNB').then((result) => {
+        if (result.status === 200) {
+          resolve(result.result[0].hash)
+        } else {
+          reject(result)
+          console.error('error', result)
+        }
+      }).catch((error) => {
+        console.error('error', error)
+        reject(error)
+      })
     })
   }
 
@@ -945,7 +1000,6 @@ class Wallet {
       case CHAIN_TYPE.ether:
       case CHAIN_TYPE.heco:
       case CHAIN_TYPE.binanceSmart:
-      case CHAIN_TYPE.binance:
       case CHAIN_TYPE.avax:
       case CHAIN_TYPE.tomo:
       case CHAIN_TYPE.celo:
@@ -959,6 +1013,8 @@ class Wallet {
         return this[`_${action}NearWallet`]
       case CHAIN_TYPE.tron:
         return this[`_${action}TronWallet`]
+      case CHAIN_TYPE.binance:
+        return this[`_${action}BinanceWallet`]
       default:
         throw new Error('Currently, we didn\'t support your input chain')
     }
