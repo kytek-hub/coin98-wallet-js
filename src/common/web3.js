@@ -6,12 +6,12 @@ import { ethers } from 'ethers'
 import { ApiPromise, WsProvider } from '@polkadot/api'
 import { getStorage, setStorage } from './utils'
 import { newKit } from '@celo/contractkit'
-import { BncClient } from 'binance-chain/lib'
+// import { BncClient } from 'binance-chain/lib/index.js'
 import 'near-api-js/dist/near-api-js'
 
-const bnbClient = new BncClient('https://dex.binance.org/')
-bnbClient.chooseNetwork('mainnet')
-bnbClient.initChain()
+// const bnbClient = new BncClient('https://dex.binance.org/')
+// bnbClient.chooseNetwork('mainnet')
+// bnbClient.initChain()
 
 const { connect, keyStores, KeyPair } = window.nearApi
 let apiPolkadot, apiKusama
@@ -156,7 +156,7 @@ export const createConnectionInstance = async (chain, isProvider, options = {}, 
     return kitCelo
   }
 
-  if (chain === CHAIN_TYPE.binance) {
-    return bnbClient
-  }
+  // if (chain === CHAIN_TYPE.binance) {
+  //   return bnbClient
+  // }
 }
