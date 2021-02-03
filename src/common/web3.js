@@ -5,7 +5,6 @@ import { Connection } from '@solana/web3.js'
 import { ethers } from 'ethers'
 import { ApiPromise, WsProvider } from '@polkadot/api'
 import { getStorage, setStorage } from './utils'
-import { newKit } from '@celo/contractkit'
 // import { BncClient } from 'binance-chain/lib/index.js'
 import 'near-api-js/dist/near-api-js'
 
@@ -151,10 +150,10 @@ export const createConnectionInstance = async (chain, isProvider, options = {}, 
     return near
   }
 
-  if (chain === CHAIN_TYPE.celo) {
-    const kitCelo = newKit(settings.web3Link[chain]).web3
-    return kitCelo
-  }
+  // if (chain === CHAIN_TYPE.celo) {
+  //   const kitCelo = newKit(settings.web3Link[chain]).web3
+  //   return kitCelo
+  // }
 
   // if (chain === CHAIN_TYPE.binance) {
   //   return bnbClient

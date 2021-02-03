@@ -14,8 +14,6 @@ import { CHAIN_TYPE } from './constants/chain_supports'
 import { createConnectionInstance } from './common/web3'
 import TronWeb from 'tronweb'
 import 'near-api-js/dist/near-api-js'
-import { newKit, CeloContract } from '@celo/contractkit'
-
 const { derivePath } = require('near-hd-key')
 const bip39 = require('bip39')
 const bs58 = require('bs58')
