@@ -4,8 +4,7 @@
   "description": "Coin98 Wallet JS Library",
   "main": "index.js",
   "scripts": {
-    "publish": "npm publish",
-    "postinstall": "find node_modules -name \"*.mjs\" | xargs rm"
+    "publish": "npm publish"
   },
   "keywords": [],
   "author": "Kytek - TDT",
