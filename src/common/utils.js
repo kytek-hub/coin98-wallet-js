@@ -2,6 +2,7 @@ import bigdecimal from 'bigdecimal'
 import get from 'lodash/get'
 import * as BufferLayout from 'buffer-layout'
 import converter from 'hex2dec'
+import { CHAIN_TYPE } from '../constants/chain_supports'
 
 export const convertWeiToBalance = (strValue, iDecimal = 18) => {
   const multiplyNum = new bigdecimal.BigDecimal(Math.pow(10, iDecimal))
@@ -81,4 +82,60 @@ export const renderFormatWallet = ({ mnemonic, name, chain, address, privateKey,
     isActive,
     chain
   }
+}
+
+export const checkAddressChain = (address, chain, selectedToken) => {
+  if (chain === CHAIN_TYPE.tron) {
+    const TronWeb = require('tronweb')
+    const tronWeb = new TronWeb({
+      fullHost: 'https://api.trongrid.io',
+      solidityNode: 'https://api.trongrid.io',
+      eventServer: 'https://api.trongrid.io',
+      privateKey: 'd1299bf83d9819560b90957253b6e481faf54f88374f0525b660dfa63a2b4b5c'
+    })
+
+    if (selectedToken.baseAddress === address) {
+      return 'sameWalletError'
+    }
+
+    return tronWeb.isAddress(address)
+  } else if (chain === CHAIN_TYPE.binance) {
+    return address.startsWith('bnb')
+  } else if (chain === CHAIN_TYPE.polkadot || chain === CHAIN_TYPE.kusama) {
+    const { hexToU8a, isHex } = require('@polkadot/util')
+    const { decodeAddress, encodeAddress } = require('@polkadot/keyring')
+
+    const isValidAddressPolkadotAddress = () => {
+      try {
+        encodeAddress(
+          isHex(address)
+            ? hexToU8a(address)
+            : decodeAddress(address)
+        )
+        return true
+      } catch (error) {
+        return false
+      }
+    }
+
+    return isValidAddressPolkadotAddress()
+  } else {
+    return chain === CHAIN_TYPE.solana ? true : ((address.startsWith('0x') && address.length === 42) && validateAddress(address) && address !== blankCode)
+  }
+}
+
+export const validateAddress = (strAddress) => {
+  let reg = ''
+  if (countDots(strAddress, '\\x') > 1) {
+    reg = /^([A-Fa-f0-9_]+)$/
+  } else {
+    reg = /^([A-Fa-f0-9_x]+)$/
+  }
+
+  return reg.test(strAddress)
+}
+
+export const countDots = (strString, strLetter) => {
+  const string = strString.toString()
+  return (string.match(RegExp(strLetter, 'g')) || []).length
 }
