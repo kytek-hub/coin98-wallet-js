@@ -189,11 +189,11 @@ class Wallet {
     }
   }
 
-  async send (toAddress, amount, sendContract, gas, chain, callback) {
+  async send (toAddress, amount, sendContract, gas, chain, callback, data) {
     const sendFunction = this._chainActionFunction(chain, 'sendFrom')
 
     try {
-      const hash = await sendFunction({ toAddress, amount, sendContract, gas, chain, callback })
+      const hash = await sendFunction({ toAddress, amount, sendContract, gas, chain, callback, data })
 
       if (typeof callback === 'function') {
         callback(hash)
@@ -303,7 +303,7 @@ class Wallet {
     })
   }
 
-  async _sendFromEthWallet ({ toAddress, amount, sendContract, gas, chain }) {
+  async _sendFromEthWallet ({ toAddress, amount, sendContract, gas, chain, data }) {
     if (!this[chain]) {
       this[chain] = await createConnectionInstance(
         chain,
@@ -353,6 +353,10 @@ class Wallet {
             amount: convertBalanceToWei(amount, contract ? contract.decimal : 18)
           }
         }
+      }
+
+      if (data) {
+        generateTxs.data = data
       }
 
       const result = await this._postBaseSendTxs([generateTxs], false, chain)
