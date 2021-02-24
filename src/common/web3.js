@@ -7,7 +7,7 @@ import { ApiPromise, WsProvider } from '@polkadot/api'
 import { getStorage, setStorage } from './utils'
 // import { BncClient } from 'binance-chain/lib/index.js'
 import 'near-api-js/dist/near-api-js'
-
+import sample from 'lodash/sample'
 // const bnbClient = new BncClient('https://dex.binance.org/')
 // bnbClient.chooseNetwork('mainnet')
 // bnbClient.initChain()
@@ -15,19 +15,18 @@ import 'near-api-js/dist/near-api-js'
 const { connect, keyStores, KeyPair } = window.nearApi
 let apiPolkadot, apiKusama
 
-export const createConnectionInstance = async (chain, isProvider, options = {}, activeKey, __DEV__ = false, __ETHER__ = false) => {
+export const createConnectionInstance = async (chain, isProvider, options = {}, infuraKeys = [], __DEV__ = false, __ETHER__ = false, apiServices) => {
   const settings = {
     web3Link: {
       solana: 'https://solana-api.projectserum.com',
       [CHAIN_TYPE.binanceSmart]: 'https://bsc-dataseed.binance.org/',
       [CHAIN_TYPE.tomo]: `https://${!__DEV__ ? 'rpc' : 'testnet'}.tomochain.com`,
       [CHAIN_TYPE.avax]: ` https://api.avax${!__DEV__ ? '' : '-test'}.network/ext/bc/C/rpc`,
-      [CHAIN_TYPE.ether]: `https://${__DEV__ || __ETHER__ ? 'rinkeby' : 'mainnet'}.infura.io/v3/${activeKey}`,
+      [CHAIN_TYPE.ether]: '',
       [CHAIN_TYPE.heco]: `https://http-${__DEV__ ? 'testnet' : 'mainnet'}.hecochain.com`,
       [CHAIN_TYPE.polkadot]: 'rpc.polkadot.io',
       [CHAIN_TYPE.kusama]: 'kusama-rpc.polkadot.io',
       [CHAIN_TYPE.celo]: 'https://rc1-forno.celo-testnet.org',
-
       [`${CHAIN_TYPE.avax}ID`]: `0xa86${__DEV__ ? 'a' : '9'}`,
       [`${CHAIN_TYPE.tomo}ID`]: `0x${__DEV__ ? '88' : '89'}`,
       [`${CHAIN_TYPE.ether}ID`]: __DEV__ || __ETHER__ ? '0x4' : '0x1',
@@ -41,12 +40,41 @@ export const createConnectionInstance = async (chain, isProvider, options = {}, 
     }
   }
 
+  // Check Infura Keys First
+  if (chain === CHAIN_TYPE.ether) {
+    // Check infuraKey First
+    let key
+    let currentKey = sample(infuraKeys)
+
+    while (!key) {
+      const check = await apiServices.getData(`web3/checkKey/${currentKey}`)
+      if (check) {
+        key = currentKey
+      } else {
+        currentKey = sample(infuraKeys)
+      }
+    }
+
+    settings.web3Link[CHAIN_TYPE.ether] = `https://${__DEV__ || __ETHER__ ? 'rinkeby' : 'mainnet'}.infura.io/v3/${key}`
+  }
+
   if (ETHER_RELATIVE_CHAIN.indexOf(chain) >= 0) {
     // Ether relative
     const provider = settings.web3Link[chain]
 
     const web3 = new Web3()
-    web3.setProvider(new web3.providers.HttpProvider(provider))
+    web3.setProvider(new web3.providers.HttpProvider(provider, {
+      headers: [
+        {
+          name: 'Authorization',
+          value: 'BasicCustom'
+        },
+        {
+          name: 'X-Requested-With',
+          value: 'XMLHttpRequest'
+        }
+      ]
+    }))
     return isProvider
       ? {
           web3,
