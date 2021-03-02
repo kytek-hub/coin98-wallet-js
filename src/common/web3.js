@@ -15,7 +15,7 @@ import sample from 'lodash/sample'
 const { connect, keyStores, KeyPair } = window.nearApi
 let apiPolkadot, apiKusama
 
-export const createConnectionInstance = async (chain, isProvider, options = {}, infuraKeys = [], __DEV__ = false, __ETHER__ = false, apiServices) => {
+export const createConnectionInstance = async (chain, isProvider, options = {}, infuraKey = null, __DEV__ = false, __ETHER__ = false, apiServices) => {
   const settings = {
     web3Link: {
       solana: 'https://solana-api.projectserum.com',
