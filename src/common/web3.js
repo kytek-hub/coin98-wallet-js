@@ -22,7 +22,7 @@ export const createConnectionInstance = async (chain, isProvider, options = {}, 
       [CHAIN_TYPE.binanceSmart]: 'https://bsc-dataseed.binance.org/',
       [CHAIN_TYPE.tomo]: `https://${!__DEV__ ? 'rpc' : 'testnet'}.tomochain.com`,
       [CHAIN_TYPE.avax]: ` https://api.avax${!__DEV__ ? '' : '-test'}.network/ext/bc/C/rpc`,
-      [CHAIN_TYPE.ether]: '',
+      [CHAIN_TYPE.ether]: `https://${__DEV__ || __ETHER__ ? 'rinkeby' : 'mainnet'}.infura.io/v3/${infuraKey}`,
       [CHAIN_TYPE.heco]: `https://http-${__DEV__ ? 'testnet' : 'mainnet'}.hecochain.com`,
       [CHAIN_TYPE.polkadot]: 'rpc.polkadot.io',
       [CHAIN_TYPE.kusama]: 'kusama-rpc.polkadot.io',
@@ -41,23 +41,6 @@ export const createConnectionInstance = async (chain, isProvider, options = {}, 
   }
 
   // Check Infura Keys First
-  if (chain === CHAIN_TYPE.ether) {
-    // Check infuraKey First
-    let key
-    let currentKey = sample(infuraKeys)
-
-    while (!key) {
-      const check = await apiServices.getData(`web3/checkKey/${currentKey}`)
-      if (check) {
-        key = currentKey
-      } else {
-        currentKey = sample(infuraKeys)
-      }
-    }
-
-    settings.web3Link[CHAIN_TYPE.ether] = `https://${__DEV__ || __ETHER__ ? 'rinkeby' : 'mainnet'}.infura.io/v3/${key}`
-  }
-
   if (ETHER_RELATIVE_CHAIN.indexOf(chain) >= 0) {
     // Ether relative
     const provider = settings.web3Link[chain]

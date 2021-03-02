@@ -47,7 +47,6 @@ class Wallet {
     this.infuraKey = defaults.infuraKey || '8bc501492617482da2029e9b84465030'
     this.web3 = null
     this.solanaConnection = null
-    this.infuraKeys = defaults.infuraKeys || []
 
     // Bind Function
     this.setMnemonic = this.setMnemonic.bind(this)
@@ -256,7 +255,7 @@ class Wallet {
         chain,
         false,
         null,
-        this.infuraKeys,
+        this.infuraKey,
         this.__DEV__,
         this.__ETHER__,
         this.apiServices
@@ -278,7 +277,7 @@ class Wallet {
         chain,
         false,
         null,
-        this.infuraKeys,
+        this.infuraKey,
         this.__DEV__,
         this.this.__ETHER__,
         this.apiServices
@@ -314,7 +313,7 @@ class Wallet {
         chain,
         false,
         null,
-        this.infuraKeys,
+        this.infuraKey,
         this.__DEV__,
         this.__ETHER__,
         this.apiServices
