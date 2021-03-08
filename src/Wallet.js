@@ -600,7 +600,7 @@ class Wallet {
       const seed = await this._genSeed()
       const nodeETH = ethers.utils.HDNode.fromSeed(seed).derivePath('m/44\'/60\'/0\'/0/0')
 
-      tronPrivateKey = nodeETH.privateKey.substring(2, getLength(nodeETH.privateKeyfif))
+      tronPrivateKey = nodeETH.privateKey.substring(2, getLength(nodeETH.privateKey))
     }
     const tronAddress = tronWeb.address.fromPrivateKey(tronPrivateKey)
 
