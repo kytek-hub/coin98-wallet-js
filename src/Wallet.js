@@ -590,10 +590,18 @@ class Wallet {
 
   // TRX
   async _createTronWallet () {
-    const seed = await this._genSeed()
-    const nodeETH = ethers.utils.HDNode.fromSeed(seed).derivePath('m/44\'/60\'/0\'/0/0')
+    let tronPrivateKey = this.privateKey
 
-    const tronPrivateKey = nodeETH.privateKey.substring(2, 66)
+    if (this.privateKey && this.privateKey.startsWith('0x')) {
+      tronPrivateKey = this.privateKey.substring(2, getLength(this.privateKey))
+    }
+
+    if (!tronPrivateKey) {
+      const seed = await this._genSeed()
+      const nodeETH = ethers.utils.HDNode.fromSeed(seed).derivePath('m/44\'/60\'/0\'/0/0')
+
+      tronPrivateKey = nodeETH.privateKey.substring(2, getLength(nodeETH.privateKeyfif))
+    }
     const tronAddress = tronWeb.address.fromPrivateKey(tronPrivateKey)
 
     const nodeWallet = {
