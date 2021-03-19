@@ -349,7 +349,7 @@ class Wallet {
         null,
         this.infuraKey,
         this.__DEV__,
-        this.this.__ETHER__,
+        this.__ETHER__,
         this.apiServices
 
       )
