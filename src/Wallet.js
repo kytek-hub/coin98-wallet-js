@@ -533,7 +533,7 @@ class Wallet {
     }
 
     if (!this.mnemonic) {
-      throw new Error('Please Provide Your Mnemonic First')
+      throw new Error('Please Provide Your Mnemonic First!')
     }
 
     const sendTokenSolanaTxs = async (sendContract, toAddress, account, amount, connectionSolana) => {
