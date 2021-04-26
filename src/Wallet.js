@@ -1,14 +1,14 @@
 import { ethers } from 'ethers'
-import { PublicKey, Account, Transaction, SystemProgram, TransactionInstruction, SYSVAR_RENT_PUBKEY } from '@solana/web3.js'
+import { PublicKey, Account, Transaction, SystemProgram, TransactionInstruction } from '@solana/web3.js'
 import { Keyring } from '@polkadot/keyring/index.js'
 import nacl from 'tweetnacl'
 import { lowerCase } from 'lodash'
 import * as BufferLayout from 'buffer-layout'
 import converter from 'hex2dec'
-import { publicKeyLayout } from '@project-serum/serum/lib/layout'
+
 // Local Import
 import EtherGasStation from './EtherGasStation'
-import { MEMO_PROGRAM_ID, MIN_ABI, SUPPORTED_CHAIN, TOKEN_PROGRAM_ID } from './constants'
+import { MIN_ABI, SUPPORTED_CHAIN, TOKEN_PROGRAM_ID } from './constants'
 import { ACCOUNT_LAYOUT, convertBalanceToWei, convertWeiToBalance, generateDataToken, getLength, sleep, renderFormatWallet } from './common/utils'
 import { CHAIN_TYPE } from './constants/chain_supports'
 import { createConnectionInstance } from './common/web3'
@@ -27,75 +27,6 @@ const tronWeb = new TronWeb({
   eventServer: 'https://api.trongrid.io',
   privateKey: 'd1299bf83d9819560b90957253b6e481faf54f88374f0525b660dfa63a2b4b5c'
 })
-
-export const OWNER_VALIDATION_PROGRAM_ID = new PublicKey(
-  '4MNPdKu9wFMvEeZBMt3Eipfs5ovVWTJb31pEXDJAAxX5'
-)
-
-const _parseTokenAccountData = (data) => {
-  const { mint, owner, amount } = ACCOUNT_LAYOUT.decode(data)
-  return {
-    mint: new PublicKey(mint),
-    owner: new PublicKey(owner),
-    amount
-  }
-}
-
-export const OWNER_VALIDATION_LAYOUT = BufferLayout.struct([
-  publicKeyLayout('account')
-])
-
-export function encodeOwnerValidationInstruction (instruction) {
-  const b = Buffer.alloc(OWNER_VALIDATION_LAYOUT.span)
-  const span = OWNER_VALIDATION_LAYOUT.encode(instruction, b)
-  return b.slice(0, span)
-}
-
-const assertOwner = ({ account, owner }) => {
-  const keys = [{ pubkey: account, isSigner: false, isWritable: false }]
-  return new TransactionInstruction({
-    keys,
-    data: encodeOwnerValidationInstruction({ account: owner }),
-    programId: OWNER_VALIDATION_PROGRAM_ID
-  })
-}
-
-const memoInstruction = (memo) => {
-  return new TransactionInstruction({
-    keys: [],
-    data: Buffer.from(memo, 'utf-8'),
-    programId: MEMO_PROGRAM_ID
-  })
-}
-
-const LAYOUT = BufferLayout.union(BufferLayout.u8('instruction'))
-LAYOUT.addVariant(
-  0,
-  BufferLayout.struct([
-    BufferLayout.u8('decimals'),
-    BufferLayout.blob(32, 'mintAuthority'),
-    BufferLayout.u8('freezeAuthorityOption'),
-    BufferLayout.blob(32, 'freezeAuthority')
-  ]),
-  'initializeMint'
-)
-LAYOUT.addVariant(1, BufferLayout.struct([]), 'initializeAccount')
-LAYOUT.addVariant(
-  3,
-  BufferLayout.struct([BufferLayout.nu64('amount')]),
-  'transfer'
-)
-LAYOUT.addVariant(
-  7,
-  BufferLayout.struct([BufferLayout.nu64('amount')]),
-  'mintTo'
-)
-LAYOUT.addVariant(
-  8,
-  BufferLayout.struct([BufferLayout.nu64('amount')]),
-  'burn'
-)
-
 class Wallet {
   constructor (defaults = {
     mnemonic: null,
@@ -103,8 +34,7 @@ class Wallet {
     isDev: false,
     isDevEther: false,
     apiServices: null,
-    infuraKey: null,
-    infuraKeys: []
+    infuraKey: null
   }) {
     // Local Properties
     this.mnemonic = defaults.mnemonic
@@ -147,7 +77,6 @@ class Wallet {
 
     // Utils binding
     this._transfer = this._transfer.bind(this)
-    this._createTransferBetweenSplTokenAccountsInstruction = this._createTransferBetweenSplTokenAccountsInstruction.bind(this)
     this._encodeTokenInstructionData = this._encodeTokenInstructionData.bind(this)
     this._awaitTransactionSignatureConfirmation = this._awaitTransactionSignatureConfirmation.bind(this)
     this._genNearKey = this._genNearKey.bind(this)
@@ -182,7 +111,7 @@ class Wallet {
   }
 
   /** Important method */
-  async create (chain, options = {}, callback = null) {
+  async create (chain, options = { }, callback = null) {
     if (typeof chain !== 'string' && typeof chain !== 'object') {
       throw new Error('Please provide correct format of chain type')
     }
@@ -260,11 +189,11 @@ class Wallet {
     }
   }
 
-  async send (toAddress, amount, sendContract, gas, chain, callback, data) {
+  async send (toAddress, amount, sendContract, gasPrice, chain, callback, data, nonce, gasLimit) {
     const sendFunction = this._chainActionFunction(chain, 'sendFrom')
 
     try {
-      const hash = await sendFunction({ toAddress, amount, sendContract, gas, chain, callback, data })
+      const hash = await sendFunction({ toAddress, amount, sendContract, gasPrice, chain, callback, data, nonce, gasLimit })
 
       if (typeof callback === 'function') {
         callback(hash)
@@ -276,7 +205,7 @@ class Wallet {
     }
   }
 
-  async sendToken () { }
+  async sendToken () {}
 
   // * Private method */
   // Ether Chain || Relative Ether Chain
@@ -327,8 +256,7 @@ class Wallet {
         null,
         this.infuraKey,
         this.__DEV__,
-        this.__ETHER__,
-        this.apiServices
+        this.__ETHER__
       )
     }
 
@@ -349,9 +277,7 @@ class Wallet {
         null,
         this.infuraKey,
         this.__DEV__,
-        this.__ETHER__,
-        this.apiServices
-
+        this.this.__ETHER__
       )
     }
 
@@ -377,7 +303,7 @@ class Wallet {
     })
   }
 
-  async _sendFromEthWallet ({ toAddress, amount, sendContract, gas, chain, data }) {
+  async _sendFromEthWallet ({ toAddress, amount, sendContract, gasPrice, chain, data, nonce, gasLimit }) {
     if (!this[chain]) {
       this[chain] = await createConnectionInstance(
         chain,
@@ -385,8 +311,7 @@ class Wallet {
         null,
         this.infuraKey,
         this.__DEV__,
-        this.__ETHER__,
-        this.apiServices
+        this.__ETHER__
       )
     }
 
@@ -419,8 +344,8 @@ class Wallet {
         generateTxs.value = amount
       }
 
-      if (gas) {
-        generateTxs.gasPrice = convertBalanceToWei(gas, 9)
+      if (gasPrice) {
+        generateTxs.gasPrice = convertBalanceToWei(gasPrice, 9)
         if (chain === CHAIN_TYPE.celo) {
           generateTxs.celoTxs = {
             to: toAddress,
@@ -432,6 +357,12 @@ class Wallet {
 
       if (data) {
         generateTxs.data = data
+      }
+      if (nonce) {
+        generateTxs.nounce = nonce
+      }
+      if (gasLimit) {
+        generateTxs.gasLimit = gasLimit
       }
 
       const result = await this._postBaseSendTxs([generateTxs], false, chain)
@@ -474,7 +405,7 @@ class Wallet {
     if (getLength(accountToken.value) > 0) {
       const findAccount = !solTokenAddress ? accountToken.value[0] : accountToken.value.find(item => lowerCase(item.pubkey.toString()) === lowerCase(solTokenAddress))
       if (findAccount) {
-        const { amount } = _parseTokenAccountData(findAccount.account.data)
+        const { amount } = this._parseTokenAccountData(findAccount.account.data)
         const amountToken = convertWeiToBalance(amount, token.decimal)
         return amountToken
       } else {
@@ -485,186 +416,46 @@ class Wallet {
     }
   }
 
-  _createTransferBetweenSplTokenAccountsInstruction ({
-    ownerPublicKey,
-    sourcePublicKey,
-    destinationPublicKey,
-    amount,
-    memo
-  }) {
-    const transaction = new Transaction().add(
-      this._transfer({
-        source: sourcePublicKey,
-        destination: destinationPublicKey,
-        owner: ownerPublicKey,
-        amount
-      })
-    )
-    if (memo) {
-      transaction.add(memoInstruction(memo))
-    }
-    return transaction
-  }
-
-  static async checkTokenSolanaExist (token, address, solTokenAddress) {
-    const connectionSolana = await createConnectionInstance(CHAIN_TYPE.solana)
-
-    const mintPublicKey = new PublicKey(token.address.toString())
-    const accountToken = await connectionSolana.getTokenAccountsByOwner(new PublicKey(address), { mint: mintPublicKey })
-    if (getLength(accountToken.value) > 0) {
-      const findAccount = !solTokenAddress
-        ? accountToken.value[0]
-        : accountToken.value.find(item => lowerCase(item.pubkey.toString()) === lowerCase(solTokenAddress))
-      if (findAccount) {
-        const { amount } = _parseTokenAccountData(findAccount.account.data)
-        const amountToken = convertWeiToBalance(amount, token.decimal)
-        return { address: findAccount.pubkey.toString(), amount: amountToken }
-      } else {
-        return null
-      }
-    } else {
-      return null
-    }
-  }
-
   async _sendFromSolWallet ({ toAddress, amount, sendContract }) {
     if (!this.solanaConnection) {
       this.solanaConnection = await createConnectionInstance(CHAIN_TYPE.solana)
     }
 
     if (!this.mnemonic) {
-      throw new Error('Please Provide Your Mnemonic First!')
-    }
-
-    const sendTokenSolanaTxs = async (sendContract, toAddress, account, amount, connectionSolana) => {
-      try {
-        const transaction = new Transaction().add(
-          this._transfer({
-            source: new PublicKey(sendContract.baseAddress),
-            destination: new PublicKey(toAddress),
-            owner: account.publicKey,
-            amount: convertBalanceToWei(amount, sendContract.decimal)
-          })
-        )
-
-        const hash = await connectionSolana.sendTransaction(transaction, [account], { preflightCommitment: 'single' })
-        try {
-          await this._awaitTransactionSignatureConfirmation(hash)
-          return hash
-        } catch (error) {
-          throw new Error(error)
-        }
-      } catch (error) {
-        throw new Error(error)
-      }
+      throw new Error('Please Provide Your Mnemonic First')
     }
 
     const seed = await bip39.mnemonicToSeed(this.mnemonic)
 
     const keyPair = nacl.sign.keyPair.fromSeed(seed.slice(0, 32))
     const account = new Account(keyPair.secretKey)
-
-    // Send token solana
     if (sendContract) {
-      const destinationAccountInfo = await this.solanaConnection.getAccountInfo(
-        new PublicKey(toAddress)
-      )
+      let transaction
+      try {
+        transaction = new Transaction().add(
+          this._transfer({
+            source: new PublicKey(sendContract.walletAddress),
+            destination: new PublicKey(toAddress),
+            owner: account.publicKey,
+            amount: convertBalanceToWei(amount, sendContract.decimal)
+          })
 
-      if (
-        !!destinationAccountInfo &&
-        destinationAccountInfo.owner.equals(TOKEN_PROGRAM_ID)
-      ) {
-        const hash = await sendTokenSolanaTxs(sendContract, toAddress, account, amount, this.solanaConnection)
-        return hash
+        )
+      } catch (error) {
+        console.log(error)
+        throw new Error(error)
       }
-      // if (!destinationAccountInfo || destinationAccountInfo.lamports === 0) {
-      //   return reject(noSolReceiver)
-      // }
-
-      const accountInfo = await Wallet.checkTokenSolanaExist(sendContract, toAddress)
-
-      if (accountInfo) {
-        const hash = await sendTokenSolanaTxs(sendContract, accountInfo.address, account, amount, this.solanaConnection)
-        return hash
-      }
-      // Send and create new Token account solana
-      const newAccount = new Account()
-      const transaction = new Transaction()
-      transaction.add(
-        assertOwner({
-          account: new PublicKey(toAddress),
-          owner: SystemProgram.programId
-        })
-      )
-      transaction.add(
-        SystemProgram.createAccount({
-          fromPubkey: account.publicKey,
-          newAccountPubkey: newAccount.publicKey,
-          lamports: await this.solanaConnection.getMinimumBalanceForRentExemption(
-            ACCOUNT_LAYOUT.span
-          ),
-          space: ACCOUNT_LAYOUT.span,
-          programId: TOKEN_PROGRAM_ID
-        })
-      )
-      const initializeAccount = ({ account, mint, owner }) => {
-        const keys = [
-          { pubkey: account, isSigner: false, isWritable: true },
-          { pubkey: mint, isSigner: false, isWritable: false },
-          { pubkey: owner, isSigner: false, isWritable: false },
-          { pubkey: SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false }
-        ]
-        return new TransactionInstruction({
-          keys,
-          data: this._encodeTokenInstructionData({
-            initializeAccount: {}
-          }),
-          programId: TOKEN_PROGRAM_ID
-        })
-      }
-
-      transaction.add(
-        initializeAccount({
-          account: newAccount.publicKey,
-          mint: new PublicKey(sendContract.address),
-          owner: new PublicKey(toAddress)
-        })
-      )
-      const transferBetweenAccountsTxn = this._createTransferBetweenSplTokenAccountsInstruction(
-        {
-          ownerPublicKey: account.publicKey,
-          sourcePublicKey: new PublicKey(sendContract.baseAddress),
-          destinationPublicKey: newAccount.publicKey,
-          amount: convertBalanceToWei(amount, sendContract.decimal)
-        }
-      )
-
-      console.log({
-        account: newAccount.publicKey.toString(),
-        mint: new PublicKey(sendContract.address).toString(),
-        owner: new PublicKey(toAddress).toString()
-      })
-
-      console.log({
-        ownerPublicKey: account.publicKey,
-        sourcePublicKey: new PublicKey(sendContract.baseAddress).toString(),
-        destinationPublicKey: newAccount.publicKey.toString(),
-        amount: convertBalanceToWei(amount, sendContract.decimal)
-      })
-
-      transaction.add(transferBetweenAccountsTxn)
-      const signers = [account, newAccount]
 
       try {
-        const hash = await this.solanaConnection.sendTransaction(transaction, signers, { preflightCommitment: 'single' })
+        const hash = await this.solanaConnection.sendTransaction(transaction, [account], { preflightCommitment: 'single' })
         try {
           await this._awaitTransactionSignatureConfirmation(hash)
           return hash
-        } catch (error) {
-          throw new Error(error)
+        } catch (e) {
+          throw new Error(e)
         }
-      } catch (error) {
-        throw new Error(error)
+      } catch (e) {
+        throw new Error(e)
       }
     } else {
       let transaction
@@ -706,7 +497,7 @@ class Wallet {
   }
 
   async _getBalanceDotWallet (address, chain) {
-    if (!this.apiServices) throw new Error('Please provide [apiServices]')
+    if (!this.apiServices) throw new Error('Please provider [apiServices]')
 
     try {
       const balancePol = await this.apiServices.postData('web3/polkadot', { chain, address })
@@ -800,19 +591,10 @@ class Wallet {
 
   // TRX
   async _createTronWallet () {
-    let tronPrivateKey = this.privateKey
+    const seed = await this._genSeed()
+    const nodeETH = ethers.utils.HDNode.fromSeed(seed).derivePath('m/44\'/60\'/0\'/0/0')
 
-    if (this.privateKey && this.privateKey.startsWith('0x')) {
-      tronPrivateKey = this.privateKey.substring(2, getLength(this.privateKey))
-    }
-
-    if (!tronPrivateKey) {
-      const seed = await this._genSeed()
-      const nodeETH = ethers.utils.HDNode.fromSeed(seed).derivePath('m/44\'/60\'/0\'/0/0')
-
-      tronPrivateKey = nodeETH.privateKey.substring(2, getLength(nodeETH.privateKey))
-      this.privateKey = tronPrivateKey
-    }
+    const tronPrivateKey = nodeETH.privateKey.substring(2, 66)
     const tronAddress = tronWeb.address.fromPrivateKey(tronPrivateKey)
 
     const nodeWallet = {
@@ -909,7 +691,7 @@ class Wallet {
     }
   }
 
-  _getTokenBalanceBinanceWallet () { }
+  _getTokenBalanceBinanceWallet () {}
 
   async _sendFromBinanceWallet ({ toAddress, amount, sendContract, chain }) {
     const bnbClient = await createConnectionInstance(chain)
@@ -977,7 +759,7 @@ class Wallet {
     const promise = arrSend.map(async (item, index) => {
       // eslint-disable-next-line no-async-promise-executor
       return new Promise(async (resolve, reject) => {
-        const { to, data, gasPrice, gas, value, percent, valueNoConvert, nounce, valueDirect } = item
+        const { to, data, gasPrice, gasLimit, value, percent, valueNoConvert, nounce, valueDirect } = item
 
         const rawTransaction = {
           nonce: (nounce || nonce) + index,
@@ -1004,8 +786,8 @@ class Wallet {
         if (valueDirect) {
           rawTransaction.value = valueDirect
         }
-        if (gas) {
-          rawTransaction.gasLimit = gas
+        if (gasPrice || gasLimit) {
+          rawTransaction.gasLimit = gasLimit || gasPrice
 
           delete rawTransaction.chainId
           delete rawTransaction.from
@@ -1067,6 +849,15 @@ class Wallet {
       return results
     } catch (e) {
       throw new Error(e)
+    }
+  }
+
+  _parseTokenAccountData (data) {
+    const { mint, owner, amount } = ACCOUNT_LAYOUT.decode(data)
+    return {
+      mint: new PublicKey(mint),
+      owner: new PublicKey(owner),
+      amount
     }
   }
 
