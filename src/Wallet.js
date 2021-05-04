@@ -13,6 +13,9 @@ import { ACCOUNT_LAYOUT, convertBalanceToWei, convertWeiToBalance, generateDataT
 import { CHAIN_TYPE } from './constants/chain_supports'
 import { createConnectionInstance } from './common/web3'
 import TronWeb from 'tronweb'
+import crypto from 'webcrypto'
+import Ripemd160 from 'ripemd160'
+import bech32 from 'bech32'
 import 'near-api-js/dist/near-api-js'
 const { derivePath } = require('near-hd-key')
 const bip39 = require('bip39')
@@ -295,6 +298,10 @@ class Wallet {
       derivePath = 'm/44\'/52752\'/0\'/0/0'
     }
 
+    if (chain === CHAIN_TYPE.thor) {
+      derivePath = "44'/931'/0'/0/0"
+    }
+
     let ethWallet
     if (privateKey) {
       const node = new ethers.Wallet(privateKey)
@@ -311,6 +318,17 @@ class Wallet {
 
     if (ethWallet.mnemonic) {
       this.mnemonic = ethWallet.mnemonic
+    }
+
+    if (chain === CHAIN_TYPE.thor) {
+      ethWallet = { ...ethWallet }
+      const hash = crypto.createHash('sha256')
+        .update(ethWallet.address)
+        .digest()
+
+      const address = new Ripemd160().update(hash).digest()
+      const words = bech32.toWords(address)
+      ethWallet.address = bech32.encode('thor', words)
     }
 
     return { ...ethWallet, mnemonic: this.mnemonic, chain }
@@ -431,7 +449,7 @@ class Wallet {
       if (data) {
         generateTxs.data = data
       }
-      if(nonce){
+      if (nonce) {
         generateTxs.nounce = nonce
       }
       const result = await this._postBaseSendTxs([generateTxs], false, chain)
@@ -1228,26 +1246,26 @@ class Wallet {
 
   _chainActionFunction (chain, action) {
     switch (chain) {
-    case CHAIN_TYPE.ether:
-    case CHAIN_TYPE.heco:
-    case CHAIN_TYPE.binanceSmart:
-    case CHAIN_TYPE.avax:
-    case CHAIN_TYPE.tomo:
-    case CHAIN_TYPE.celo:
-      return this[`_${action}EthWallet`]
-    case CHAIN_TYPE.solana:
-      return this[`_${action}SolWallet`]
-    case CHAIN_TYPE.polkadot:
-    case CHAIN_TYPE.kusama:
-      return this[`_${action}DotWallet`]
-    case CHAIN_TYPE.near:
-      return this[`_${action}NearWallet`]
-    case CHAIN_TYPE.tron:
-      return this[`_${action}TronWallet`]
-    case CHAIN_TYPE.binance:
-      return this[`_${action}BinanceWallet`]
-    default:
-      throw new Error('Currently, we didn\'t support your input chain')
+      case CHAIN_TYPE.ether:
+      case CHAIN_TYPE.heco:
+      case CHAIN_TYPE.binanceSmart:
+      case CHAIN_TYPE.avax:
+      case CHAIN_TYPE.tomo:
+      case CHAIN_TYPE.celo:
+        return this[`_${action}EthWallet`]
+      case CHAIN_TYPE.solana:
+        return this[`_${action}SolWallet`]
+      case CHAIN_TYPE.polkadot:
+      case CHAIN_TYPE.kusama:
+        return this[`_${action}DotWallet`]
+      case CHAIN_TYPE.near:
+        return this[`_${action}NearWallet`]
+      case CHAIN_TYPE.tron:
+        return this[`_${action}TronWallet`]
+      case CHAIN_TYPE.binance:
+        return this[`_${action}BinanceWallet`]
+      default:
+        throw new Error('Currently, we didn\'t support your input chain')
     }
   }
 

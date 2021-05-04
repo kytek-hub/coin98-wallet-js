@@ -17,7 +17,8 @@ export const CHAIN_TYPE = {
   heco: 'heco',
   near: 'near',
   avax: 'avax',
-  link: 'link'
+  link: 'link',
+  thor: 'thor'
 }
 
 export default [
@@ -26,6 +27,7 @@ export default [
   CHAIN_TYPE.heco,
   CHAIN_TYPE.avax,
   CHAIN_TYPE.tomo,
+  CHAIN_TYPE.thor,
   // CHAIN_TYPE.binance,
   // CHAIN_TYPE.celo,
   CHAIN_TYPE.tron,
