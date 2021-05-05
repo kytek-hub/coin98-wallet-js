@@ -1249,7 +1249,7 @@ class Wallet {
   async _genSeed (returnProcess = false, isBinance = false) {
     const { mnemonic } = this
 
-    const processMnemonic = mnemonic || isBinance ? bip39.generateMnemonic() : ethers.utils.HDNode.entropyToMnemonic(ethers.utils.randomBytes(16))
+    const processMnemonic = mnemonic || (isBinance ? bip39.generateMnemonic() : ethers.utils.HDNode.entropyToMnemonic(ethers.utils.randomBytes(16)))
 
     this.mnemonic = processMnemonic
 
