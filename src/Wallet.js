@@ -8,7 +8,7 @@ import converter from 'hex2dec'
 import { publicKeyLayout } from '@project-serum/serum/lib/layout'
 // Local Import
 import EtherGasStation from './EtherGasStation'
-import { MEMO_PROGRAM_ID, MIN_ABI, SUPPORTED_CHAIN, TOKEN_PROGRAM_ID } from './constants'
+import { COSMOS_RELATIVE_CHAIN, MEMO_PROGRAM_ID, MIN_ABI, SUPPORTED_CHAIN, TOKEN_PROGRAM_ID } from './constants'
 import { ACCOUNT_LAYOUT, convertBalanceToWei, convertWeiToBalance, generateDataToken, getLength, sleep, renderFormatWallet } from './common/utils'
 import { CHAIN_TYPE } from './constants/chain_supports'
 import { createConnectionInstance } from './common/web3'
@@ -16,6 +16,8 @@ import TronWeb from 'tronweb'
 import crypto from 'webcrypto'
 import Ripemd160 from 'ripemd160'
 import bech32 from 'bech32'
+import CosmosSDK from './services/cosmosClient'
+
 import 'near-api-js/dist/near-api-js'
 const { derivePath } = require('near-hd-key')
 const bip39 = require('bip39')
@@ -135,6 +137,7 @@ class Wallet {
     this._createDotWallet = this._createDotWallet.bind(this)
     this._createTronWallet = this._createTronWallet.bind(this)
     this._createNearWallet = this._createNearWallet.bind(this)
+    this._createBinanceWallet = this._createBinanceWallet.bind(this)
     this._getBalanceEthWallet = this._getBalanceEthWallet.bind(this)
     this._getBalanceDotWallet = this._getBalanceDotWallet.bind(this)
     this._getBalanceSolWallet = this._getBalanceSolWallet.bind(this)
@@ -298,10 +301,6 @@ class Wallet {
       derivePath = 'm/44\'/52752\'/0\'/0/0'
     }
 
-    if (chain === CHAIN_TYPE.thor) {
-      derivePath = "44'/931'/0'/0/0"
-    }
-
     let ethWallet
     if (privateKey) {
       const node = new ethers.Wallet(privateKey)
@@ -318,17 +317,6 @@ class Wallet {
 
     if (ethWallet.mnemonic) {
       this.mnemonic = ethWallet.mnemonic
-    }
-
-    if (chain === CHAIN_TYPE.thor) {
-      ethWallet = { ...ethWallet }
-      const hash = crypto.createHash('sha256')
-        .update(ethWallet.address)
-        .digest()
-
-      const address = new Ripemd160().update(hash).digest()
-      const words = bech32.toWords(address)
-      ethWallet.address = bech32.encode('thor', words)
     }
 
     return { ...ethWallet, mnemonic: this.mnemonic, chain }
@@ -901,12 +889,30 @@ class Wallet {
   }
 
   //* *** Binance */
-  async _createBinanceWallet () {
+  async _createBinanceWallet (chain) {
+    let derivePath = '44\'/714\'/0\'/0/0'
+
+    if (chain === CHAIN_TYPE.thor) {
+      derivePath = "44'/931'/0'/0/0"
+    }
+
+    if (chain === CHAIN_TYPE.cosmos) {
+      derivePath = "44'/118'/0'/0/0"
+    }
+
+    if (chain === CHAIN_TYPE.terra) {
+      derivePath = "44'/330'/0'/0/0"
+    }
+
+    if (chain === CHAIN_TYPE.kava) {
+      derivePath = "m/44'/459'/0'/0/0"
+    }
+
     const seed = await this._genSeed()
     const master = bip32.fromSeed(seed)
-    const nodeBNB = master.derivePath('44\'/714\'/0\'/0/0')
+    const nodeBNB = master.derivePath(derivePath)
     const bnbPrivateKey = nodeBNB.privateKey.toString('hex')
-    const bnbAddress = this.getAddressFromPublicKey(bnbPrivateKey)
+    const bnbAddress = this._getAddress(nodeBNB.publicKey, CHAIN_TYPE[chain])
     const nodeWallet = {
       privateKey: bnbPrivateKey,
       address: bnbAddress
@@ -915,7 +921,15 @@ class Wallet {
     return nodeWallet
   }
 
-  async _getBalanceBinanceWallet (address, chain) {
+  async _getBalanceBinanceWallet (address, chain, assets) {
+    if (COSMOS_RELATIVE_CHAIN.includes(chain)) {
+      const client = new CosmosSDK({ chain })
+
+      const balance = await client.getBalance({ address })
+
+      return balance || 0
+    }
+
     const bnbClient = await createConnectionInstance(chain)
     const balance = await bnbClient.getBalance(address)
     if (getLength(balance) > 0) {
@@ -928,7 +942,20 @@ class Wallet {
 
   _getTokenBalanceBinanceWallet () { }
 
-  async _sendFromBinanceWallet ({ toAddress, amount, sendContract, chain }) {
+  async _sendFromBinanceWallet ({ toAddress, amount, sendContract, gasLimit, chain, data, nonce }) {
+    // Cosmos
+    if (COSMOS_RELATIVE_CHAIN.includes(chain)) {
+      const client = new CosmosSDK({ chain })
+
+      try {
+        const response = await client.transfer({ toAddress, amount, chain, privateKey: this.privateKey, mnemonic: this.mnemonic })
+
+        return response
+      } catch (e) {
+        Promise.reject(e)
+      }
+    }
+
     const bnbClient = await createConnectionInstance(chain)
     const bnbAccount = bnbClient.recoverAccountFromPrivateKey(this.privateKey)
     bnbClient.setPrivateKey(this.privateKey)
@@ -1219,10 +1246,10 @@ class Wallet {
     return result
   }
 
-  async _genSeed (returnProcess = false) {
+  async _genSeed (returnProcess = false, isBinance = false) {
     const { mnemonic } = this
 
-    const processMnemonic = mnemonic || ethers.utils.HDNode.entropyToMnemonic(ethers.utils.randomBytes(16))
+    const processMnemonic = mnemonic || isBinance ? bip39.generateMnemonic() : ethers.utils.HDNode.entropyToMnemonic(ethers.utils.randomBytes(16))
 
     this.mnemonic = processMnemonic
 
@@ -1263,6 +1290,8 @@ class Wallet {
       case CHAIN_TYPE.tron:
         return this[`_${action}TronWallet`]
       case CHAIN_TYPE.binance:
+      case CHAIN_TYPE.thor:
+      case CHAIN_TYPE.cosmos:
         return this[`_${action}BinanceWallet`]
       default:
         throw new Error('Currently, we didn\'t support your input chain')
@@ -1283,6 +1312,21 @@ class Wallet {
     }
 
     return !!SUPPORTED_CHAIN.find(chain => chain === chainSearch)
+  }
+
+  async _getBnBAddressFromPublicKey () {
+    return ''
+  }
+
+  _getAddress (publicKey, prefix = 'thor') {
+    const hash = crypto.createHash('sha256')
+      .update(publicKey)
+      .digest()
+
+    const address = new Ripemd160().update(hash).digest()
+    const words = bech32.toWords(address)
+
+    return bech32.encode(prefix, words)
   }
 }
 

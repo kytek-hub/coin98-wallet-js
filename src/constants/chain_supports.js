@@ -11,14 +11,17 @@ export const CHAIN_TYPE = {
   tron: 'tron',
   polkadot: 'polkadot',
   celo: 'celo',
-  cosmos: 'cosmos',
   doge: 'doge',
   kusama: 'kusama',
   heco: 'heco',
   near: 'near',
   avax: 'avax',
   link: 'link',
-  thor: 'thor'
+  // Cosmos
+  thor: 'thor',
+  cosmos: 'cosmos',
+  terra: 'terra',
+  kava: 'kava'
 }
 
 export default [
@@ -27,7 +30,6 @@ export default [
   CHAIN_TYPE.heco,
   CHAIN_TYPE.avax,
   CHAIN_TYPE.tomo,
-  CHAIN_TYPE.thor,
   // CHAIN_TYPE.binance,
   // CHAIN_TYPE.celo,
   CHAIN_TYPE.tron,
@@ -35,4 +37,9 @@ export default [
   CHAIN_TYPE.polkadot,
   CHAIN_TYPE.kusama,
   CHAIN_TYPE.near
+  // Cosmos Base
+  // CHAIN_TYPE.thor,
+  // CHAIN_TYPE.cosmos,
+  // CHAIN_TYPE.terra
+
 ]
