@@ -7,7 +7,6 @@ import { ApiPromise, WsProvider } from '@polkadot/api'
 import { getStorage, setStorage } from './utils'
 // import { BncClient } from 'binance-chain/lib/index.js'
 import 'near-api-js/dist/near-api-js'
-import sample from 'lodash/sample'
 // const bnbClient = new BncClient('https://dex.binance.org/')
 // bnbClient.chooseNetwork('mainnet')
 // bnbClient.initChain()

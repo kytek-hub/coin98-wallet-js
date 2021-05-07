@@ -39,7 +39,7 @@ export default [
   CHAIN_TYPE.near
   // Cosmos Base
   // CHAIN_TYPE.thor,
-  // CHAIN_TYPE.cosmos,
+  // CHAIN_TYPE.cosmos
   // CHAIN_TYPE.terra
 
 ]

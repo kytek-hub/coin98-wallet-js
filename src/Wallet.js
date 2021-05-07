@@ -915,7 +915,9 @@ class Wallet {
     const bnbAddress = this._getAddress(nodeBNB.publicKey, CHAIN_TYPE[chain])
     const nodeWallet = {
       privateKey: bnbPrivateKey,
-      address: bnbAddress
+      address: bnbAddress,
+      chain,
+      mnemonic: this.seed ? this.seed.mnemonic : this.mnemonic
     }
 
     return nodeWallet
