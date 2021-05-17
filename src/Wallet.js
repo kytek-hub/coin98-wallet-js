@@ -15,10 +15,10 @@ import { createConnectionInstance } from './common/web3'
 import TronWeb from 'tronweb'
 import crypto from 'webcrypto'
 import Ripemd160 from 'ripemd160'
-import bech32 from 'bech32'
-import CosmosSDK from './services/cosmosClient'
+import { bech32 } from 'bech32'
 
 import 'near-api-js/dist/near-api-js'
+import CosmosServices from './services/cosmosServices'
 const { derivePath } = require('near-hd-key')
 const bip39 = require('bip39')
 const bs58 = require('bs58')
@@ -150,7 +150,7 @@ class Wallet {
     this._sendFromDotWallet = this._sendFromDotWallet.bind(this)
     this._sendFromNearWallet = this._sendFromNearWallet.bind(this)
     this._sendFromTronWallet = this._sendFromTronWallet.bind(this)
-
+    this._sendFromBinanceWallet = this._sendFromBinanceWallet.bind(this)
     // Utils binding
     this._transfer = this._transfer.bind(this)
     this._createTransferBetweenSplTokenAccountsInstruction = this._createTransferBetweenSplTokenAccountsInstruction.bind(this)
@@ -908,6 +908,10 @@ class Wallet {
       derivePath = "m/44'/459'/0'/0/0"
     }
 
+    if (chain === CHAIN_TYPE.band) {
+      derivePath = "m/44'/494'/0'/0/0"
+    }
+
     const seed = await this._genSeed()
     const master = bip32.fromSeed(seed)
     const nodeBNB = master.derivePath(derivePath)
@@ -925,7 +929,7 @@ class Wallet {
 
   async _getBalanceBinanceWallet (address, chain, assets) {
     if (COSMOS_RELATIVE_CHAIN.includes(chain)) {
-      const client = new CosmosSDK({ chain })
+      const client = new CosmosServices({ chain })
 
       const balance = await client.getBalance({ address })
 
@@ -947,14 +951,14 @@ class Wallet {
   async _sendFromBinanceWallet ({ toAddress, amount, sendContract, gasLimit, chain, data, nonce }) {
     // Cosmos
     if (COSMOS_RELATIVE_CHAIN.includes(chain)) {
-      const client = new CosmosSDK({ chain })
+      const client = new CosmosServices({ chain })
 
       try {
         const response = await client.transfer({ toAddress, amount, chain, privateKey: this.privateKey, mnemonic: this.mnemonic })
 
         return response
       } catch (e) {
-        Promise.reject(e)
+        return Promise.reject(e)
       }
     }
 
@@ -1294,6 +1298,7 @@ class Wallet {
       case CHAIN_TYPE.binance:
       case CHAIN_TYPE.thor:
       case CHAIN_TYPE.cosmos:
+      case CHAIN_TYPE.kava:
         return this[`_${action}BinanceWallet`]
       default:
         throw new Error('Currently, we didn\'t support your input chain')

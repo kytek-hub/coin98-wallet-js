@@ -36,10 +36,12 @@ export default [
   CHAIN_TYPE.solana,
   CHAIN_TYPE.polkadot,
   CHAIN_TYPE.kusama,
-  CHAIN_TYPE.near
+  CHAIN_TYPE.near,
   // Cosmos Base
-  // CHAIN_TYPE.thor,
-  // CHAIN_TYPE.cosmos
+  CHAIN_TYPE.thor,
+  CHAIN_TYPE.cosmos,
+  CHAIN_TYPE.band
+  // CHAIN_TYPE.kava
   // CHAIN_TYPE.terra
 
 ]
