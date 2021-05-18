@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "@bandprotocol/bandchain.js": "^1.2.1",
-    "@cosmostation/cosmosjs": "^0.10.3",
+    "@cosmostation/cosmosjs": "https://github.com/thanhtamv2t/cosmosjs",
     "@kava-labs/javascript-sdk": "^4.0.1-beta.2",
     "@polkadot/api": "^3.6.4",
     "@polkadot/keyring": "^5.4.4",

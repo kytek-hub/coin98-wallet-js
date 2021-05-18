@@ -266,10 +266,10 @@ class Wallet {
     }
   }
 
-  async send (toAddress, amount, sendContract, gas, chain, callback, data, gasLimit, nonce) {
+  async send ({ toAddress, amount, sendContract, gas, chain, callback, data, gasLimit, nonce, memo = '' }) {
     const sendFunction = this._chainActionFunction(chain, 'sendFrom')
     try {
-      const hash = await sendFunction({ toAddress, amount, sendContract, gas, chain, callback, data, gasLimit, nonce })
+      const hash = await sendFunction({ toAddress, amount, sendContract, gas, chain, callback, data, gasLimit, nonce, memo })
       if (typeof callback === 'function') {
         callback(hash)
       }
@@ -948,13 +948,13 @@ class Wallet {
 
   _getTokenBalanceBinanceWallet () { }
 
-  async _sendFromBinanceWallet ({ toAddress, amount, sendContract, gasLimit, chain, data, nonce }) {
+  async _sendFromBinanceWallet ({ toAddress, amount, sendContract, gasLimit, chain, memo }) {
     // Cosmos
     if (COSMOS_RELATIVE_CHAIN.includes(chain)) {
       const client = new CosmosServices({ chain })
 
       try {
-        const response = await client.transfer({ toAddress, amount, chain, privateKey: this.privateKey, mnemonic: this.mnemonic })
+        const response = await client.transfer({ toAddress, amount, chain, privateKey: this.privateKey, mnemonic: this.mnemonic, memo })
 
         return response
       } catch (e) {

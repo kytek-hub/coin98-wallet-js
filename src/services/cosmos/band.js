@@ -65,7 +65,7 @@ class BandServices {
       )
 
       const chainId = await this.client.getChainID()
-      const tsc = new Transaction().withMessages(msgSend).withAccountNum(account.accountNumber).withSequence(account.sequence).withChainID(chainId).withGas(200000)
+      const tsc = new Transaction().withMessages(msgSend).withAccountNum(account.accountNumber).withSequence(account.sequence).withChainID(chainId).withGas(200000).withMemo(memo)
       const rawData = tsc.getSignData()
       const signature = privKey.sign(rawData)
       const rawTx = tsc.getTxData(signature, pubKey)

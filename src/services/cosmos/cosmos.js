@@ -64,7 +64,7 @@ class CosmosServices {
 
         const txBody = new message.cosmos.tx.v1beta1.TxBody({
           messages: [msgSendAny],
-          memo: ''
+          memo
         })
 
         const signerInfo = new message.cosmos.tx.v1beta1.SignerInfo({
