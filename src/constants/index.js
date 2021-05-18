@@ -6,7 +6,7 @@ export const SUPPORTED_CHAIN = chainSupports
 
 export const ETHER_RELATIVE_CHAIN = [CHAIN_TYPE.ether, CHAIN_TYPE.binanceSmart, CHAIN_TYPE.heco, CHAIN_TYPE.avax, CHAIN_TYPE.tomo, CHAIN_TYPE.thor, CHAIN_TYPE.cosmos]
 
-export const COSMOS_RELATIVE_CHAIN = [CHAIN_TYPE.cosmos, CHAIN_TYPE.thor]
+export const COSMOS_RELATIVE_CHAIN = [CHAIN_TYPE.cosmos, CHAIN_TYPE.thor, CHAIN_TYPE.band]
 
 export const DOT_RELATIVE_CHAIN = [CHAIN_TYPE.polkadot, CHAIN_TYPE.kusama]
 

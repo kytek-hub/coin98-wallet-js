@@ -1,6 +1,6 @@
 import { Client } from '@xchainjs/xchain-thorchain'
 import { baseAmount } from '@xchainjs/xchain-util'
-import { convertBalanceToWei } from '../../common/utils'
+import { convertBalanceToWei, convertWeiToBalance } from '../../common/utils'
 class ThorServices {
   constructor ({ network = 'mainnet' }) {
     this.chain = 'thor'
@@ -14,8 +14,7 @@ class ThorServices {
   async getBalance ({ address, asset = 'rune' }) {
     try {
       const balances = await this.client.getBalance(address)
-      const balance = balances.find(it => it.demom.toUpperCase() === asset.toUpperCase()) || 0
-      return balance
+      return convertWeiToBalance(balances[0].amount.amount(), this.decimal)
     } catch (e) {
       return 0
     }

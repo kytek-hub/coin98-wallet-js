@@ -1299,6 +1299,8 @@ class Wallet {
       case CHAIN_TYPE.thor:
       case CHAIN_TYPE.cosmos:
       case CHAIN_TYPE.kava:
+      case CHAIN_TYPE.terra:
+      case CHAIN_TYPE.band:
         return this[`_${action}BinanceWallet`]
       default:
         throw new Error('Currently, we didn\'t support your input chain')

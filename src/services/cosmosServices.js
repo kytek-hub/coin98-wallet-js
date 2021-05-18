@@ -2,7 +2,7 @@ import Services from './cosmos'
 
 class CosmosServices {
   constructor ({ chain }) {
-    this.client = new Services[chain]()
+    this.client = new Services[chain]({})
 
     // Bind
     this.getBalance = this.getBalance.bind(this)

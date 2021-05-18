@@ -1,9 +1,8 @@
 import { convertBalanceToWei, convertWeiToBalance } from '../../common/utils'
-
-import { Client, Message, Transaction, Wallet } from '@bandprotocol/bandchain.js'
+import { Client, Message, Data, Transaction, Wallet } from '@bandprotocol/bandchain.js'
 
 const { MsgSend } = Message
-// const { Coin } = Data
+const { Coin } = Data
 const { PrivateKey, Address } = Wallet
 
 class BandServices {
@@ -11,7 +10,7 @@ class BandServices {
     this.chain = 'band'
     this.network = this._getNetwork(network)
     this.client = new Client(this.network)
-    this.decimal = 9
+    this.decimal = 6
 
     // Binding
     this.getBalance = this.getBalance.bind(this)
@@ -25,15 +24,17 @@ class BandServices {
 
       const coins = account.coins || []
 
-      const findAsset = coins.find(it => it.denom.toUpperCase() === assets.toUpperCase())
+      const findAsset = coins.find(it => it.denom === assets)
 
       const balance = findAsset ? findAsset.amount : 0
 
       if (balance) {
-        return convertWeiToBalance(balance, this.decimal)
+        const fBalance = convertWeiToBalance(balance, this.decimal)
+        return fBalance
       }
       return 0
     } catch (e) {
+      console.log('test', e)
       return 0
     }
   }
@@ -46,32 +47,30 @@ class BandServices {
     asset = 'uband'
   }) {
     try {
-      const privKey = PrivateKey.fromMnemonic(mnemonic)
+      const privKey = PrivateKey.fromMnemonic(mnemonic, "m/44'/494'/0'/0/0")
       const pubKey = privKey.toPubkey()
       const fromAddress = pubKey.toAddress()
 
       // Fetch Accounts
-      const account = await this.client.getAccount(Address.fromAccBech32(fromAddress))
+      const account = await this.client.getAccount(fromAddress)
 
       const fAmount = convertBalanceToWei(amount, this.decimal)
-      const coins = [{
-        denom: String(asset),
-        amount: String(fAmount)
-      }]
+
+      const coins = new Coin(parseInt(fAmount), asset)
 
       const msgSend = new MsgSend(
-        Address.fromAccBech32(fromAddress),
+        fromAddress,
         Address.fromAccBech32(toAddress),
-        coins
+        [coins]
       )
 
-      const tsc = new Transaction().withMessages(msgSend).withAccountNum(account.accountNumber).withSequence(account.sequence).withChainID('bandchain').withGas(200000)
-
+      const chainId = await this.client.getChainID()
+      const tsc = new Transaction().withMessages(msgSend).withAccountNum(account.accountNumber).withSequence(account.sequence).withChainID(chainId).withGas(200000)
       const rawData = tsc.getSignData()
       const signature = privKey.sign(rawData)
       const rawTx = tsc.getTxData(signature, pubKey)
-      const txtHash = await this.client.sendTxSyncMode(rawTx)
-      return txtHash
+      const { txHash } = await this.client.sendTxBlockMode(rawTx)
+      return txHash ? txHash.toString('hex') : undefined
     } catch (e) {
       throw new Error(e)
     }
