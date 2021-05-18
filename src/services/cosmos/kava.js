@@ -1,7 +1,6 @@
-const Kava = require('@kava-labs/javascript-sdk')
+import * as Kava from '@kava-labs/javascript-sdk'
 
 const KAVA_CONVERSION_FACTOR = 10 ** 6
-
 class KavaServices {
   constructor ({ network }) {
     this.chain = 'kava'

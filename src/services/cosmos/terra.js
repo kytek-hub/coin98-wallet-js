@@ -1,6 +1,6 @@
 class TerraServices {
   constructor ({ network }) {
-    this.chain = 'terra'
+    this.chain = 'terra-luna'
     this.network = this._getNetwork(network)
     // this.client = new Client(this.network)
     this.decimal = 9
@@ -15,7 +15,13 @@ class TerraServices {
 
   transfer () {}
 
-  _getNetwork () {}
+  // Ulities
+  _getNetwork (network = 'mainnet') {
+    if (network === 'mainnet') {
+      return 'https://lcd.terra.dev'
+    }
+    return 'https://lcd.terra.dev'
+  }
 }
 
 export default TerraServices
