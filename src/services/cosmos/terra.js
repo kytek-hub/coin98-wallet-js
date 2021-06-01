@@ -107,7 +107,7 @@ class TerraServices {
   }
 
   // Ulities
-  _isNative = (denom) => {
+  _isNative (denom) {
     return (denom.startsWith('u') && getLength(denom) === 4) || lowerCase(denom) === 'uluna'
   }
 

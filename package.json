@@ -23,6 +23,7 @@
     "webpack-cli": "^4.0.0"
   },
   "dependencies": {
+    "@apollo/client": "^3.3.19",
     "@bandprotocol/bandchain.js": "^1.2.1",
     "@cosmostation/cosmosjs": "https://github.com/thanhtamv2t/cosmosjs",
     "@kava-labs/javascript-sdk": "^4.0.1-beta.2",
@@ -46,6 +47,7 @@
     "buffer-layout": "^1.2.0",
     "cosmos-client": "https://github.com/thanhtamv2t/cosmos-client-ts",
     "ethers": "^4.0.46",
+    "graphql": "^15.5.0",
     "hex2dec": "^1.1.2",
     "lodash": "^4.17.20",
     "near-api-js": "^0.36.3",
