@@ -1,8 +1,8 @@
 
-import { convertBalanceToWei, convertWeiToBalance } from 'common/function'
 import get from 'lodash/get'
 import axios from 'axios'
 import Kava from '@kava-labs/javascript-sdk'
+import { convertBalanceToWei, convertWeiToBalance } from '../../common/utils'
 const sig = require('@kava-labs/sig')
 
 const { msg, tx } = Kava

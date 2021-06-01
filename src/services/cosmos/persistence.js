@@ -1,7 +1,7 @@
-import { convertBalanceToWei, convertWeiToBalance } from 'common/function'
 import { Cosmos } from '@cosmostation/cosmosjs'
 import message from '@cosmostation/cosmosjs/src/messages/proto'
 import axios from 'axios'
+import { convertBalanceToWei, convertWeiToBalance } from '../../common/utils'
 
 class PersistenceServices {
   constructor ({ network = 'mainnet' }) {

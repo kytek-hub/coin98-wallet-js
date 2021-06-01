@@ -1,5 +1,5 @@
 import { LCDClient, MsgSend, MsgExecuteContract, MnemonicKey } from '@terra-money/terra.js'
-import { convertBalanceToWei, convertWeiToBalance, getLength, lowerCase } from 'common/function'
+import { convertBalanceToWei, convertWeiToBalance, getLength, lowerCase } from '../../common/utils'
 import { ApolloClient, InMemoryCache, gql } from '@apollo/client'
 import get from 'lodash/get'
 class TerraServices {
