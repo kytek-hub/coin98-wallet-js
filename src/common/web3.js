@@ -1,5 +1,5 @@
 import { DOT_RELATIVE_CHAIN, ETHER_RELATIVE_CHAIN, SOLANA_RELATIVE_CHAIN } from '../constants'
-import { CHAIN_TYPE } from '../constants/chain_supports'
+import { CHAIN_TYPE } from '../constants/chains'
 import Web3 from 'web3'
 import { Connection } from '@solana/web3.js'
 import { ethers } from 'ethers'

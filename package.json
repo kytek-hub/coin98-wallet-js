@@ -30,6 +30,7 @@
     "@polkadot/keyring": "^5.4.4",
     "@project-serum/serum": "^0.13.19",
     "@solana/web3.js": "^0.90.4",
+    "@terra-money/terra.js": "^1.8.0",
     "@xchainjs/xchain-client": "^0.8.0",
     "@xchainjs/xchain-cosmos": "^0.12.0",
     "@xchainjs/xchain-crypto": "^0.2.3",

@@ -2,7 +2,7 @@ import bigdecimal from 'bigdecimal'
 import get from 'lodash/get'
 import * as BufferLayout from 'buffer-layout'
 import converter from 'hex2dec'
-import { CHAIN_TYPE } from '../constants/chain_supports'
+import { CHAIN_TYPE } from '../constants/chains'
 
 export const convertWeiToBalance = (strValue, iDecimal = 18) => {
   const multiplyNum = new bigdecimal.BigDecimal(Math.pow(10, iDecimal))

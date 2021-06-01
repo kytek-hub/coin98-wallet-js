@@ -1,6 +1,6 @@
 import { PublicKey } from '@solana/web3.js'
 
-import chainSupports, { CHAIN_TYPE } from './chain_supports'
+import chainSupports, { CHAIN_TYPE } from './chains'
 
 export const SUPPORTED_CHAIN = chainSupports
 

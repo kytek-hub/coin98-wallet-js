@@ -1,4 +1,4 @@
-import { CHAIN_TYPE } from './constants/chain_supports'
+import { CHAIN_TYPE } from './constants/chains'
 
 class EtherGasStation {
   constructor ({ apiServices }) {
