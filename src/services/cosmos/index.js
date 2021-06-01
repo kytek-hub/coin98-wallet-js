@@ -1,13 +1,15 @@
 import band from './band'
 import cosmos from './cosmos'
 import thor from './thor'
-// import kava from './kava'
-// import terra from './terra'
+import terra from './terra'
+import persistence from './persistence'
+import kava from './kava'
 
 export default {
   band,
   cosmos,
-  // kava,
-  // terra,
-  thor
+  thor,
+  terra,
+  persistence,
+  kava
 }

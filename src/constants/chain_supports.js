@@ -17,11 +17,15 @@ export const CHAIN_TYPE = {
   near: 'near',
   avax: 'avax',
   link: 'link',
+  fantom: 'fantom',
+  matic: 'matic',
   // Cosmos
   thor: 'thor',
   cosmos: 'cosmos',
   terra: 'terra',
-  kava: 'kava'
+  kava: 'kava',
+  persistence: 'persistence'
+
 }
 
 export default [
@@ -30,6 +34,8 @@ export default [
   CHAIN_TYPE.heco,
   CHAIN_TYPE.avax,
   CHAIN_TYPE.tomo,
+  CHAIN_TYPE.fantom,
+  CHAIN_TYPE.matic,
   // CHAIN_TYPE.binance,
   // CHAIN_TYPE.celo,
   CHAIN_TYPE.tron,
@@ -40,8 +46,9 @@ export default [
   // Cosmos Base
   CHAIN_TYPE.thor,
   CHAIN_TYPE.cosmos,
-  CHAIN_TYPE.band
-  // CHAIN_TYPE.kava
-  // CHAIN_TYPE.terra
+  CHAIN_TYPE.band,
+  CHAIN_TYPE.kava,
+  CHAIN_TYPE.persistence,
+  CHAIN_TYPE.terra
 
 ]

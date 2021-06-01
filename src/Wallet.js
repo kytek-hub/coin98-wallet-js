@@ -912,6 +912,10 @@ class Wallet {
       derivePath = "m/44'/494'/0'/0/0"
     }
 
+    if (chain === CHAIN_TYPE.persistence) {
+      derivePath = "m/44'/750'/0'/0/0"
+    }
+
     const seed = await this._genSeed()
     const master = bip32.fromSeed(seed)
     const nodeBNB = master.derivePath(derivePath)
@@ -1285,6 +1289,8 @@ class Wallet {
       case CHAIN_TYPE.avax:
       case CHAIN_TYPE.tomo:
       case CHAIN_TYPE.celo:
+      case CHAIN_TYPE.fantom:
+      case CHAIN_TYPE.matic:
         return this[`_${action}EthWallet`]
       case CHAIN_TYPE.solana:
         return this[`_${action}SolWallet`]
@@ -1301,6 +1307,7 @@ class Wallet {
       case CHAIN_TYPE.kava:
       case CHAIN_TYPE.terra:
       case CHAIN_TYPE.band:
+      case CHAIN_TYPE.persistence:
         return this[`_${action}BinanceWallet`]
       default:
         throw new Error('Currently, we didn\'t support your input chain')

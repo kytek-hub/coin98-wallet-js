@@ -26,11 +26,15 @@ export const createConnectionInstance = async (chain, isProvider, options = {}, 
       [CHAIN_TYPE.polkadot]: 'rpc.polkadot.io',
       [CHAIN_TYPE.kusama]: 'kusama-rpc.polkadot.io',
       [CHAIN_TYPE.celo]: 'https://rc1-forno.celo-testnet.org',
+      [CHAIN_TYPE.fantom]: !__DEV__ ? 'https://rpcapi.fantom.network/' : 'https://rpc.testnet.fantom.network/',
+      [CHAIN_TYPE.matic]: !__DEV__ ? 'https://rpc-mainnet.maticvigil.com/' : 'https://rpc-mumbai.maticvigil.com/',
       [`${CHAIN_TYPE.avax}ID`]: `0xa86${__DEV__ ? '9' : 'a'}`,
       [`${CHAIN_TYPE.tomo}ID`]: `0x${__DEV__ ? '88' : '89'}`,
       [`${CHAIN_TYPE.ether}ID`]: __DEV__ || __ETHER__ ? '0x4' : '0x1',
       [`${CHAIN_TYPE.heco}ID`]: `0x${__DEV__ ? '256' : '128'}`,
-      [`${CHAIN_TYPE.binanceSmart}ID`]: '0x38'
+      [`${CHAIN_TYPE.binanceSmart}ID`]: '0x38',
+      [`${CHAIN_TYPE.fantom}ID`]: !__DEV__ ? '0xFA' : '0xfa2', // 250
+      [`${CHAIN_TYPE.matic}ID`]: !__DEV__ ? '0x89' : '0x13881' // 137
     },
     gas: {
       ETH: 21000,
@@ -45,18 +49,7 @@ export const createConnectionInstance = async (chain, isProvider, options = {}, 
     const provider = settings.web3Link[chain]
 
     const web3 = new Web3()
-    web3.setProvider(new web3.providers.HttpProvider(provider, {
-      headers: [
-        {
-          name: 'Authorization',
-          value: 'BasicCustom'
-        },
-        {
-          name: 'X-Requested-With',
-          value: 'XMLHttpRequest'
-        }
-      ]
-    }))
+    web3.setProvider(new web3.providers.HttpProvider(provider))
     return isProvider
       ? {
           web3,

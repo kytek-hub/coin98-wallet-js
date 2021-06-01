@@ -1,53 +1,94 @@
-import * as Kava from '@kava-labs/javascript-sdk'
 
-const KAVA_CONVERSION_FACTOR = 10 ** 6
-class KavaServices {
-  constructor ({ network }) {
+import { convertBalanceToWei, convertWeiToBalance } from 'common/function'
+import get from 'lodash/get'
+import axios from 'axios'
+import Kava from '@kava-labs/javascript-sdk'
+const sig = require('@kava-labs/sig')
+
+const { msg, tx } = Kava
+
+class CosmosServices {
+  constructor ({ network = 'mainnet' }) {
     this.chain = 'kava'
-    this.network = this._getNetwork(network)
-    this.client = new Kava.KavaClient(this.network)
-
+    this.chainId = 'kava-7'
+    this.decimal = 6
     // Binding
     this.getBalance = this.getBalance.bind(this)
     this.transfer = this.transfer.bind(this)
-    this._getNetwork = this._getNetwork.bind(this)
   }
 
   async getBalance ({ address, assets = 'ukava' }) {
     try {
-      const balances = await this.client.getBalances(address, 10000)
+      const response = await (await fetch(`${this._getNetwork()}/auth/accounts/${address}`)).json()
 
-      const balance = balances.find(it => it.denom.toUpperCase() === assets.toUpperCase())
+      const coins = get(response, 'result.value.coins', [])
+
+      const balance = coins.find(it => it.denom.toUpperCase() === assets.toUpperCase())
       if (balance) {
-        return balance.amount / KAVA_CONVERSION_FACTOR
+        return convertWeiToBalance(balance.amount, this.decimal)
       }
       return 0
     } catch (e) {
+      console.log('kava error', e)
       return 0
     }
   }
 
   async transfer ({
     toAddress,
-    mnemonic,
     amount,
-    asset = 'ukava'
+    asset = 'ukava',
+    mnemonic,
+    memo = '',
+    fee = {
+      amount: [{ denom: 'ukava', amount: String(2000) }],
+      gas: '200000'
+    }
   }) {
     try {
-      this.client.setWallet(mnemonic)
-      this.client.setBroadcastMode('async')
-      await this.client.initChain()
+      const amountWei = convertBalanceToWei(amount, this.decimal)
+      const wallet = sig.createWalletFromMnemonic(mnemonic, '', 'kava', "m/44'/459'/0'/0/0")
+      const address = wallet.address
+      const accounts = await (await fetch(this._getNetwork() + `/auth/accounts/${address}`)).json()
 
-      const fAmount = parseFloat(amount) * KAVA_CONVERSION_FACTOR
-      const coins = [{
-        denom: String(asset),
-        amount: String(fAmount)
-      }]
-      const txtHash = await this.client.transfer(toAddress, coins)
+      if (accounts) {
+        const { account_number: accountNumber, sequence = String(0) } = accounts.result.value
 
-      return txtHash
+        const msgSend = msg.cosmos.newMsgSend(address, toAddress, [{ denom: asset, amount: String(amountWei) }])
+        const rawTx = msg.cosmos.newStdTx([msgSend], fee, memo)
+
+        // Sign info
+        let signInfo
+        if (accountNumber && sequence) {
+          signInfo = {
+            chain_id: this.chainId,
+            account_number: String(accountNumber),
+            sequence: String(sequence)
+          }
+        } else {
+          const meta = await tx.loadMetaData(address, this._getNetwork())
+          // Select manually set values over automatically pulled values
+          signInfo = {
+            chain_id: this.chainId,
+            account_number:
+            accountNumber != null
+              ? String(accountNumber)
+              : String(meta.account_number),
+            sequence: sequence ? String(sequence) : String(meta.sequence)
+          }
+        }
+
+        const signedTx = tx.signTx(rawTx, signInfo, wallet)
+        const { data: response } = await axios.post(`${this._getNetwork()}/txs`, sig.createBroadcastTx(signedTx.value, 'block'))
+
+        if (response.code) {
+          throw new Error(response.raw_log)
+        }
+
+        return response.txhash || response.hash
+      }
     } catch (e) {
-      throw new Error(e)
+      console.log('Kava transfer Error', e)
     }
   }
 
@@ -56,8 +97,8 @@ class KavaServices {
     if (network === 'mainnet') {
       return 'https://api.kava.io'
     }
-    return 'https://api.data-testnet-12000.kava.io'
+    return 'https://api.kava.io'
   }
 }
 
-export default KavaServices
+export default CosmosServices
