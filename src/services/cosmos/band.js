@@ -1,5 +1,5 @@
 import { convertBalanceToWei, convertWeiToBalance } from '../../common/utils'
-import { Client, Message, Data, Transaction, Wallet } from '@bandprotocol/bandchain.js'
+import { Client, Message, Data, Transaction, Wallet } from '@bandprotocol/bandchain.js/'
 
 const { MsgSend } = Message
 const { Coin } = Data

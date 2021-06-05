@@ -1,5 +1,4 @@
-import { Cosmos } from '@cosmostation/cosmosjs'
-import message from '@cosmostation/cosmosjs/src/messages/proto'
+
 import axios from 'axios'
 import { convertBalanceToWei, convertWeiToBalance } from '../../common/utils'
 
@@ -7,7 +6,6 @@ class PersistenceServices {
   constructor ({ network = 'mainnet' }) {
     this.chain = 'persistence'
     this.chainId = 'core-1'
-    this.client = new Cosmos(this._getNetwork(), this.chainId)
     this.decimal = 6
     // Binding
     this.getBalance = this.getBalance.bind(this)
@@ -39,8 +37,10 @@ class PersistenceServices {
     }
   }) {
     try {
+      const message = await import('@cosmostation/cosmosjs/src/messages/proto')
+      const { Cosmos } = await import('@cosmostation/cosmosjs')
+      const cosmos = new Cosmos(this._getNetwork(), this.chainId)
       const amountWei = convertBalanceToWei(amount, this.decimal)
-      const cosmos = this.client
 
       cosmos.setPath("m/44'/750'/0'/0/0")
       cosmos.setBech32MainPrefix('persistence')

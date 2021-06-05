@@ -1,12 +1,7 @@
 
 import get from 'lodash/get'
 import axios from 'axios'
-import Kava from '@kava-labs/javascript-sdk'
 import { convertBalanceToWei, convertWeiToBalance } from '../../common/utils'
-const sig = require('@kava-labs/sig')
-
-const { msg, tx } = Kava
-
 class CosmosServices {
   constructor ({ network = 'mainnet' }) {
     this.chain = 'kava'
@@ -46,6 +41,12 @@ class CosmosServices {
     }
   }) {
     try {
+      const sig = await import('@kava-labs/sig/dist/web')
+
+      const msg = await import('@kava-labs/javascript-sdk/src/msg/cosmos/index')
+
+      const tx = await import('@kava-labs/javascript-sdk/src/tx/index')
+
       const amountWei = convertBalanceToWei(amount, this.decimal)
       const wallet = sig.createWalletFromMnemonic(mnemonic, '', 'kava', "m/44'/459'/0'/0/0")
       const address = wallet.address

@@ -1,13 +1,11 @@
 import { convertBalanceToWei, convertWeiToBalance } from '../../common/utils'
-import { Cosmos } from '@cosmostation/cosmosjs'
-import message from '@cosmostation/cosmosjs/src/messages/proto'
+
 import axios from 'axios'
 
 class CosmosServices {
   constructor ({ network = 'mainnet' }) {
     this.chain = 'cosmos'
     this.chainId = 'cosmoshub-4'
-    this.client = new Cosmos(this._getNetwork(), this.chainId)
     this.decimal = 6
     // Binding
     this.getBalance = this.getBalance.bind(this)
@@ -39,13 +37,14 @@ class CosmosServices {
     }
   }) {
     try {
+      const message = await import('@cosmostation/cosmosjs/src/messages/proto')
+      const { Cosmos } = await import('@cosmostation/cosmosjs')
       const amountWei = convertBalanceToWei(amount, this.decimal)
-      const cosmos = this.client
+      const cosmos = new Cosmos(this._getNetwork(), this.chainId)
       const address = cosmos.getAddress(mnemonic)
       const privKey = cosmos.getECPairPriv(mnemonic)
       const pubKeyAny = cosmos.getPubKeyAny(privKey)
       const accounts = await cosmos.getAccounts(address)
-      console.log('🚀 ~ file: cosmos.js ~ line 48 ~ CosmosServices ~ accounts', accounts)
 
       const feeTxs = 50
 

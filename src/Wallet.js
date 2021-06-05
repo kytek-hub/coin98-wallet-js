@@ -862,21 +862,37 @@ class Wallet {
     }
     tronWeb.setPrivateKey(realPrivateKey)
 
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       if (sendContract) {
-        tronWeb.contract().at(sendContract.address).then(async (contract) => {
-          contract.transfer(toAddress, convertAmount).send({
-            feeLimit: 1e9,
-            callValue: 0,
-            shouldPollResponse: false
-          }).then(res => resolve(res)).catch(error => {
+        if (tronWeb.isAddress(sendContract.address)) {
+          tronWeb.contract().at(sendContract.address).then(async (contract) => {
+            contract.transfer(toAddress, convertAmount).send({
+              feeLimit: 1e9,
+              callValue: 0,
+              shouldPollResponse: false
+            }).then(res => resolve(res)).catch(error => {
+              console.log(error)
+              reject(error)
+            })
+          }).catch(error => {
             console.log(error)
             reject(error)
           })
-        }).catch(error => {
-          console.log(error)
-          reject(error)
-        })
+        } else {
+          try {
+            const tradeObj = await tronWeb.transactionBuilder.sendToken(toAddress, convertAmount, sendContract.address, sendContract.walletAddress)
+            // Sign
+            const signedTxts = await tronWeb.trx.sign(tradeObj, realPrivateKey)
+            // Receive
+            const receipt = await tronWeb.trx.sendRawTransaction(signedTxts)
+            resolve(receipt.transaction.txID)
+          } catch (e) {
+            console.log(e)
+            reject(e)
+          }
+
+          return false
+        }
       } else {
         tronWeb.trx.sendTransaction(toAddress, convertAmount, realPrivateKey).then(result => {
           resolve(result.transaction.txID)
@@ -1014,7 +1030,9 @@ class Wallet {
       [`${CHAIN_TYPE.tomo}ID`]: `0x${this.__DEV__ ? '88' : '89'}`,
       [`${CHAIN_TYPE.ether}ID`]: this.__DEV__ || this.__ETHER__ ? '0x2A' : '0x1',
       [`${CHAIN_TYPE.heco}ID`]: `0x${this.__DEV__ ? '256' : '128'}`,
-      [`${CHAIN_TYPE.binanceSmart}ID`]: '0x38'
+      [`${CHAIN_TYPE.binanceSmart}ID`]: '0x38',
+      [`${CHAIN_TYPE.fantom}ID`]: '0xFA',
+      [`${CHAIN_TYPE.matic}ID`]: '0x89'
     }
     const { web3, provider } = await createConnectionInstance(chain, true, null, this.infuraKey, this.__DEV__)
 
@@ -1061,7 +1079,9 @@ class Wallet {
           try {
             rawTransaction.gasLimit = gas || gasLimit
 
-            delete rawTransaction.chainId
+            if (!this.__DEV__ && ![CHAIN_TYPE.avax, CHAIN_TYPE.matic].includes(chain)) {
+              delete rawTransaction.chainId
+            }
             delete rawTransaction.from
 
             if (!rawTransaction.to) delete rawTransaction.to
@@ -1093,9 +1113,10 @@ class Wallet {
           this.estimateGasTxs(rawTransaction, web3).then(async (gasLimit) => {
             rawTransaction.gasLimit = item.gasLimit ? converter.decToHex(item.gasLimit) : '0x' + gasLimit.toString(16)
 
-            if (!this.__DEV__) {
+            if (!this.__DEV__ && ![CHAIN_TYPE.avax, CHAIN_TYPE.matic].includes(chain)) {
               delete rawTransaction.chainId
             }
+
             delete rawTransaction.from
             const signedTransaction = await ethWallet.sign(rawTransaction)
             let hashTxs
