@@ -45,7 +45,7 @@ class CosmosServices {
 
       const msg = await import('@kava-labs/javascript-sdk/src/msg/cosmos/index')
 
-      const tx = await import('@kava-labs/javascript-sdk/src/tx/index')
+      const { tx } = await import('@kava-labs/javascript-sdk/src/tx/index')
 
       const amountWei = convertBalanceToWei(amount, this.decimal)
       const wallet = sig.createWalletFromMnemonic(mnemonic, '', 'kava', "m/44'/459'/0'/0/0")
