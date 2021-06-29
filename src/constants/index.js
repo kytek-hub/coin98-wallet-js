@@ -4,7 +4,7 @@ import chainSupports, { CHAIN_TYPE } from './chains'
 
 export const SUPPORTED_CHAIN = chainSupports
 
-export const ETHER_RELATIVE_CHAIN = [CHAIN_TYPE.ether, CHAIN_TYPE.binanceSmart, CHAIN_TYPE.heco, CHAIN_TYPE.avax, CHAIN_TYPE.tomo, CHAIN_TYPE.fantom, CHAIN_TYPE.matic]
+export const ETHER_RELATIVE_CHAIN = [CHAIN_TYPE.ether, CHAIN_TYPE.binanceSmart, CHAIN_TYPE.heco, CHAIN_TYPE.avax, CHAIN_TYPE.avaxX, CHAIN_TYPE.tomo, CHAIN_TYPE.fantom, CHAIN_TYPE.matic]
 
 export const COSMOS_RELATIVE_CHAIN = [CHAIN_TYPE.cosmos, CHAIN_TYPE.thor, CHAIN_TYPE.band, CHAIN_TYPE.terra, CHAIN_TYPE.kava, CHAIN_TYPE.persistence]
 

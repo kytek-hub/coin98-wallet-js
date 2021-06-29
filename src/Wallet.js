@@ -16,14 +16,17 @@ import TronWeb from 'tronweb'
 import crypto from 'webcrypto'
 import Ripemd160 from 'ripemd160'
 import { bech32 } from 'bech32'
-
-import 'near-api-js/dist/near-api-js'
+import { derivePath as SolDerivePath } from 'ed25519-hd-key'
+import AvaxX from './services/avax'
+// import 'near-api-js/dist/near-api-js'
 import CosmosServices from './services/cosmosServices'
 const { derivePath } = require('near-hd-key')
 const bip39 = require('bip39')
 const bs58 = require('bs58')
 const bip32 = require('bip32')
-const { KeyPair, utils } = window.nearApi
+// const { KeyPair, utils } = window.nearApi
+const nearAPI = require('near-api-js')
+const { KeyPair, utils: nearUtils } = nearAPI
 
 //* New Wallet with object = { mnemonic, privateKey }
 const tronWeb = new TronWeb({
@@ -55,6 +58,8 @@ export function encodeOwnerValidationInstruction (instruction) {
   const span = OWNER_VALIDATION_LAYOUT.encode(instruction, b)
   return b.slice(0, span)
 }
+
+export const avaxClient = new AvaxX()
 
 const assertOwner = ({ account, owner }) => {
   const keys = [{ pubkey: account, isSigner: false, isWritable: false }]
@@ -121,7 +126,7 @@ class Wallet {
     this.infuraKey = defaults.infuraKey || '8bc501492617482da2029e9b84465030'
     this.web3 = null
     this.solanaConnection = null
-
+    this.avaxClient = avaxClient
     // Bind Function
     this.setMnemonic = this.setMnemonic.bind(this)
     this.setPrivateKey = this.setPrivateKey.bind(this)
@@ -129,7 +134,7 @@ class Wallet {
     this.getBalance = this.getBalance.bind(this)
     this.getTokenBalance = this.getTokenBalance.bind(this)
     this.send = this.send.bind(this)
-
+    this.setReduxServices = this.setReduxServices.bind(this)
     // Private method binding
     this._createEthWallet = this._createEthWallet.bind(this)
     this._createDotWallet = this._createDotWallet.bind(this)
@@ -173,6 +178,10 @@ class Wallet {
 
   getSupportChains () {
     return SUPPORTED_CHAIN
+  }
+
+  setReduxServices(reduxServices){
+    avaxClient.setReduxServices(reduxServices)
   }
 
   // * ---------
@@ -266,16 +275,17 @@ class Wallet {
     }
   }
 
-  async send ({ toAddress, amount, sendContract, gas, chain, callback, data, gasLimit, nonce, memo = '' }) {
+  async send ({ toAddress, amount, sendContract, gas, chain, callback, data, gasLimit, nonce, memo = '', isSollet, advanceInfo }) {
     const sendFunction = this._chainActionFunction(chain, 'sendFrom')
     try {
-      const hash = await sendFunction({ toAddress, amount, sendContract, gas, chain, callback, data, gasLimit, nonce, memo })
+      const hash = await sendFunction({ toAddress, amount, sendContract, gas, chain, callback, data, gasLimit, nonce, memo, isSollet, advanceInfo })
       if (typeof callback === 'function') {
         callback(hash)
       }
 
       return hash
     } catch (e) {
+      console.log('e', e)
       throw new Error(e)
     }
   }
@@ -299,6 +309,15 @@ class Wallet {
 
     if (chain === CHAIN_TYPE.celo) {
       derivePath = 'm/44\'/52752\'/0\'/0/0'
+    }
+
+    if (chain === CHAIN_TYPE.avaxX) {
+      const seed = await this._genSeed()
+      console.log(this.seed)
+      const masterKey = await avaxClient.updateSeed(this.mnemonic, seed)
+      const currentAddress = await avaxClient.getAddress()
+      const resObj = { masterKey, address: currentAddress.address, mnemonic: this.mnemonic, chain }
+      return resObj;
     }
 
     let ethWallet
@@ -381,7 +400,7 @@ class Wallet {
     })
   }
 
-  async _sendFromEthWallet ({ toAddress, amount, sendContract, gas, gasLimit, chain, data, nonce }) {
+  async _sendFromEthWallet ({ toAddress, amount, sendContract, gas, gasLimit, chain, data, nonce, advanceInfo }) {
     if (!this[chain]) {
       this[chain] = await createConnectionInstance(
         chain,
@@ -393,6 +412,7 @@ class Wallet {
         this.apiServices
       )
     }
+
     try {
       let contract = sendContract
       let isETHContract = false
@@ -423,6 +443,7 @@ class Wallet {
       if (gasLimit) {
         generateTxs.gasLimit = gasLimit
       }
+
       if (gas) {
         generateTxs.gasPrice = convertBalanceToWei(gas, 9)
         if (chain === CHAIN_TYPE.celo) {
@@ -433,6 +454,14 @@ class Wallet {
           }
         }
       }
+
+      if (advanceInfo) {
+        generateTxs.gasPrice = convertBalanceToWei(advanceInfo.gasPrice, 9)
+        generateTxs.nounce = parseFloat(advanceInfo.nounce)
+        generateTxs.data = (contract && contract.data === '0x') ? generateTxs.data : advanceInfo.data
+        generateTxs.gasLimit = advanceInfo.gasLimit
+      }
+
 
       if (data) {
         generateTxs.data = data
@@ -448,11 +477,19 @@ class Wallet {
   }
 
   // Solana
-  async _createSolWallet (chain) {
+  async _createSolWallet (chain, options) {
+    const { isSollet, derivePath } = options
     const seed = await this._genSeed()
-    const keyPair = nacl.sign.keyPair.fromSeed(seed.slice(0, 32))
+    const deriveSeed = derivePath || SolDerivePath('m/44\'/501\'/0\'/0\'', seed).key
+    const keyPair = nacl.sign.keyPair.fromSeed(isSollet ? deriveSeed : seed.slice(0, 32))
     const node = new Account(keyPair.secretKey)
-    return { privateKey: node.secretKey.toString(), address: node.publicKey.toString(), chain, mnemonic: this.mnemonic }
+    return {
+      privateKey: node.secretKey.toString(),
+      address: node.publicKey.toString(),
+      chain,
+      mnemonic: this.mnemonic,
+      isSollet
+    }
   }
 
   async _getBalanceSolWallet (address) {
@@ -533,7 +570,7 @@ class Wallet {
     }
   }
 
-  async _sendFromSolWallet ({ toAddress, amount, sendContract }) {
+  async _sendFromSolWallet ({ toAddress, amount, sendContract, isSollet }) {
     if (!this.solanaConnection) {
       this.solanaConnection = await createConnectionInstance(CHAIN_TYPE.solana)
     }
@@ -566,8 +603,8 @@ class Wallet {
     }
 
     const seed = await bip39.mnemonicToSeed(this.mnemonic)
-
-    const keyPair = nacl.sign.keyPair.fromSeed(seed.slice(0, 32))
+    const deriveSeed = SolDerivePath('m/44\'/501\'/0\'/0\'', seed).key
+    const keyPair = nacl.sign.keyPair.fromSeed(isSollet ? deriveSeed : seed.slice(0, 32))
     const account = new Account(keyPair.secretKey)
 
     // Send token solana
@@ -770,14 +807,19 @@ class Wallet {
       address
     })
 
-    const account = await near.account(address)
 
     try {
-      const balance = await account.getAccountBalance()
-
-      return utils.format.formatNearAmount(balance.available || 0)
+      const account = await near.account(address)
+      const { total: balance } = await account.getAccountBalance()
+      let formatBalance = nearUtils.format.formatNearAmount(balance.toString())
+      const isNeedFormat = formatBalance.indexOf(".") >= 0 && formatBalance.indexOf(",") >= 0
+      if(isNeedFormat){
+        formatBalance = parseFloat(formatBalance.split('.')[0].split(',').join('.')) 
+      }
+      return formatBalance
     } catch (e) {
-      throw new Error(e)
+      console.log('error', e)
+      throw new Error(e)   
     }
   }
 
@@ -796,7 +838,7 @@ class Wallet {
     const account = await near.account(address)
 
     try {
-      const formatAmount = utils.format.parseNearAmount(amount.toString())
+      const formatAmount = nearUtils.format.parseNearAmount(amount.toString())
       const txts = await account.sendMoney(toAddress, formatAmount)
       return txts.transaction.hash
     } catch (e) {
@@ -1308,6 +1350,7 @@ class Wallet {
       case CHAIN_TYPE.heco:
       case CHAIN_TYPE.binanceSmart:
       case CHAIN_TYPE.avax:
+      case CHAIN_TYPE.avaxX:
       case CHAIN_TYPE.tomo:
       case CHAIN_TYPE.celo:
       case CHAIN_TYPE.fantom:

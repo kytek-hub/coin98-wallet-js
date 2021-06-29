@@ -10,8 +10,9 @@ import 'near-api-js/dist/near-api-js'
 // const bnbClient = new BncClient('https://dex.binance.org/')
 // bnbClient.chooseNetwork('mainnet')
 // bnbClient.initChain()
+const nearAPI = require('near-api-js')
+const { KeyPair, utils: nearUtils } = nearAPI
 
-const { connect, keyStores, KeyPair } = window.nearApi
 let apiPolkadot, apiKusama
 
 export const createConnectionInstance = async (chain, isProvider, options = {}, infuraKey = null, __DEV__ = false, __ETHER__ = false, apiServices) => {
@@ -132,25 +133,45 @@ export const createConnectionInstance = async (chain, isProvider, options = {}, 
   }
 
   if (chain === CHAIN_TYPE.near) {
-    const { privateKey, address: sender } = options
+    const { connect, keyStores } = nearAPI
 
     const networkId = 'mainnet'
     const keyStore = new keyStores.InMemoryKeyStore()
-    const keyPair = KeyPair.fromString(privateKey)
-    await keyStore.setKey(networkId, sender, keyPair)
-
+  
+    if (options) {
+      const { privateKey, address: sender } = options
+      const keyPair = KeyPair.fromString(privateKey)
+      keyStore.setKey(networkId, sender, keyPair)
+    }
+  
     const config = {
       networkId,
       keyStore,
-      nodeUrl: `https://rpc.${networkId}.near.org`,
-      walletUrl: `https://wallet.${networkId}.near.org`,
-      helperUrl: `https://helper.${networkId}.near.org`,
-      explorerUrl: `https://explorer.${networkId}.near.org`
+      nodeUrl: 'https://rpc.mainnet.near.org',
+      walletUrl: 'https://wallet.mainnet.near.org',
+      helperUrl: 'https://helper.mainnet.near.org',
+      explorerUrl: 'https://explorer.mainnet.near.org'
     }
-
     const near = await connect(config)
-
+  
     return near
+    // const networkId = 'mainnet'
+    // const keyStore = new keyStores.InMemoryKeyStore()
+    // const keyPair = KeyPair.fromString(privateKey)
+    // await keyStore.setKey(networkId, sender, keyPair)
+
+    // const config = {
+    //   networkId,
+    //   keyStore,
+    //   nodeUrl: `https://rpc.${networkId}.near.org`,
+    //   walletUrl: `https://wallet.${networkId}.near.org`,
+    //   helperUrl: `https://helper.${networkId}.near.org`,
+    //   explorerUrl: `https://explorer.${networkId}.near.org`
+    // }
+
+    // const near = await connect(config)
+
+    // return near
   }
 
   // if (chain === CHAIN_TYPE.celo) {

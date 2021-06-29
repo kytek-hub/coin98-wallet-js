@@ -73,7 +73,7 @@ export const generateDataToken = (amount = 0, address) => {
   }
 }
 
-export const renderFormatWallet = ({ mnemonic, name, chain, address, privateKey, isMulti = false, isActive = true }) => {
+export const renderFormatWallet = ({ mnemonic, name, chain, address, privateKey, isMulti = false, isActive = true, isSollet, masterKey }) => {
   return {
     address,
     privateKey,
@@ -81,7 +81,9 @@ export const renderFormatWallet = ({ mnemonic, name, chain, address, privateKey,
     isMulti,
     name,
     isActive,
-    chain
+    chain,
+    isSollet,
+    masterKey
   }
 }
 
